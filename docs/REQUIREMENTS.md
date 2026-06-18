@@ -51,6 +51,23 @@ party with a **share code** — no accounts.
 ### CoinPurse (owned value object)
 - `Copper`, `Silver`, `Electrum`, `Gold`, `Platinum` (ints) — discrete coins held by a party/character.
 
+## Party stash & item location
+
+The **party stash** is not a separate entity — it is the party's shared **container**: the
+party's own `CoinPurse` plus all items with `CharacterId == null`. The stash and each
+character share the same shape (coins + items); the stash is simply the default home for
+items nobody is holding.
+
+**Item location is expressed by `Item.CharacterId`** (null = stash). The item API is flat
+under the party:
+
+- `GET/POST   /api/parties/{partyId}/items` — list / create (create body may set `characterId`; null = stash)
+- `GET/PUT/DELETE /api/parties/{partyId}/items/{itemId}` — get / update / delete
+- **Moving** an item between inventories = changing `characterId` (via `PUT`).
+- `GET /api/parties/{partyId}/stash` — convenience read view returning `{ coins, items[] }` for the stash.
+
+A `characterId` supplied on create/move must reference a character in the **same party**.
+
 ## Money display
 
 Monetary **values** (e.g. item cost) are stored as a decimal of **gp**. A display helper

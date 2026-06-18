@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using PartyInventory.Api.Data;
 using PartyInventory.Api.Endpoints;
@@ -11,6 +12,10 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
+
+// Serialize enums as their string names (e.g. "Weapon", "Rare") rather than integers.
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 var app = builder.Build();
 
@@ -27,6 +32,7 @@ app.UseHttpsRedirection();
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 app.MapPartyEndpoints();
 app.MapCharacterEndpoints();
+app.MapItemEndpoints();
 
 app.Run();
 
