@@ -15,7 +15,7 @@ for the product spec and data model.
 
 ## Backend — remaining
 
-- [ ] **CORS** — allow the frontend origin (`http://localhost:3000`) to call the API *(blocks frontend integration)*
+- [x] **CORS** — allow the frontend origin (`http://localhost:3000`) to call the API
 - [ ] **SignalR** — per-party hub group; broadcast item & character changes for live sync
 - [ ] **Coin management** — endpoints to adjust stash and character purses
 - [ ] (stretch) Identity / claim-a-character → restricted per-character permissions
