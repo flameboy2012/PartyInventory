@@ -15,7 +15,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function JoinPartyDialog() {
+export function JoinPartyDialog({
+  onJoined,
+}: {
+  onJoined: (party: { id: string; name: string; joinCode: string }) => void;
+}) {
   const api = useApi();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -37,6 +41,11 @@ export function JoinPartyDialog() {
       return;
     }
 
+    onJoined({
+      id: result.data.id,
+      name: result.data.name,
+      joinCode: result.data.joinCode,
+    });
     setOpen(false);
     setCode("");
     router.push(`/parties/${result.data.id}`);

@@ -20,7 +20,7 @@ for the product spec and data model.
 - [ ] **Coin management** — endpoints to adjust stash and character purses
 - [ ] (stretch) Identity / claim-a-character → restricted per-character permissions
 - [ ] (stretch) DM / admin role
-- [ ] (stretch) Remember joined parties in browser storage — quick re-entry from the landing page
+- [x] Remember joined parties in browser storage — landing page lists only your created/joined parties (promoted from stretch: a global directory would leak ids and defeat the join code)
 
 ## Frontend
 
@@ -33,7 +33,7 @@ for the product spec and data model.
 - [ ] Shared money helper (gp decimal → cp/sp/ep/gp/pp display)
 
 ### Pages / flows
-- [x] **Landing** — list parties (discovery), create a party, join by code (create/join dialogs + table)
+- [x] **Landing** — your remembered parties (localStorage) + create / join-by-code dialogs
 - [ ] **Party view** — overview of the stash + characters, with coins
 - [ ] **Stash** — list/add/edit/move/delete items in the shared stash
 - [ ] **Character inventory** — per-character items + coins

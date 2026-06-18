@@ -1,13 +1,12 @@
 "use client";
 
-import useSWR from "swr";
-import type { PartySummary } from "@/lib/api/types";
 import { CreatePartyDialog } from "@/components/parties/create-party-dialog";
 import { JoinPartyDialog } from "@/components/parties/join-party-dialog";
 import { PartiesTable } from "@/components/parties/parties-table";
+import { useRememberedParties } from "@/lib/remembered-parties";
 
 export default function HomePage() {
-  const { data: parties, error, isLoading } = useSWR<PartySummary[]>("/api/parties");
+  const { parties, loaded, remember, forget } = useRememberedParties();
 
   return (
     <main className="mx-auto w-full max-w-3xl px-6 py-12">
@@ -19,22 +18,18 @@ export default function HomePage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <CreatePartyDialog />
-          <JoinPartyDialog />
+          <CreatePartyDialog onCreated={remember} />
+          <JoinPartyDialog onJoined={remember} />
         </div>
       </div>
 
       <section className="mt-8">
-        <h2 className="mb-2 text-sm font-medium text-muted-foreground">Parties</h2>
-        {isLoading && (
+        <h2 className="mb-2 text-sm font-medium text-muted-foreground">Your parties</h2>
+        {!loaded ? (
           <p className="py-8 text-center text-sm text-muted-foreground">Loading…</p>
+        ) : (
+          <PartiesTable parties={parties} onForget={forget} />
         )}
-        {error && (
-          <p className="py-8 text-center text-sm text-destructive">
-            Couldn&apos;t reach the API. Is it running?
-          </p>
-        )}
-        {parties && <PartiesTable parties={parties} />}
       </section>
     </main>
   );

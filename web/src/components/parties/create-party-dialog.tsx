@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSWRConfig } from "swr";
 import { useApi } from "@/components/api-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,10 +15,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function CreatePartyDialog() {
+export function CreatePartyDialog({
+  onCreated,
+}: {
+  onCreated: (party: { id: string; name: string; joinCode: string }) => void;
+}) {
   const api = useApi();
   const router = useRouter();
-  const { mutate } = useSWRConfig();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +39,11 @@ export function CreatePartyDialog() {
       return;
     }
 
-    await mutate("/api/parties");
+    onCreated({
+      id: result.data.id,
+      name: result.data.name,
+      joinCode: result.data.joinCode,
+    });
     setOpen(false);
     setName("");
     router.push(`/parties/${result.data.id}`);
