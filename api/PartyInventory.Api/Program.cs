@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PartyInventory.Api.Data;
+using PartyInventory.Api.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,5 +22,6 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
+app.MapPartyEndpoints();
 
 app.Run();
