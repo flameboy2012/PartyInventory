@@ -24,7 +24,10 @@ for the product spec and data model.
 ## Frontend
 
 ### Setup
-- [ ] Decide stack bits — data fetching, type generation, UI components *(see Decisions)*
+- [x] OpenAPI snapshot test + committed `openapi/v1.json` (build types against a repo artifact)
+- [ ] Generate TS types from `openapi/v1.json` (openapi-typescript)
+- [ ] SWR setup (fetcher + provider)
+- [ ] shadcn/ui init
 - [ ] API client + base URL config (`NEXT_PUBLIC_API_BASE_URL`)
 - [ ] Shared money helper (gp decimal → cp/sp/ep/gp/pp display)
 
@@ -45,8 +48,8 @@ for the product spec and data model.
 - [ ] Frontend/e2e tests
 - [ ] Deployment & hosting config
 
-## Decisions to make (frontend)
+## Decisions (frontend)
 
-- [ ] Server-state / data fetching approach
-- [ ] API types — generate from OpenAPI vs hand-write
-- [ ] UI components — plain Tailwind vs a component library
+- [x] Server-state / data fetching — **SWR**
+- [x] API types — **generate from OpenAPI**, pinned via a committed snapshot (`openapi/v1.json`)
+- [x] UI components — **shadcn/ui**
