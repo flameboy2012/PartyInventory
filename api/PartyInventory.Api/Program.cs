@@ -25,3 +25,6 @@ app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 app.MapPartyEndpoints();
 
 app.Run();
+
+// Exposes the implicit top-level Program class to the test project (WebApplicationFactory<Program>).
+public partial class Program;

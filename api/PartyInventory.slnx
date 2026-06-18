@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="PartyInventory.Api.Tests/PartyInventory.Api.Tests.csproj" />
   <Project Path="PartyInventory.Api/PartyInventory.Api.csproj" />
 </Solution>
