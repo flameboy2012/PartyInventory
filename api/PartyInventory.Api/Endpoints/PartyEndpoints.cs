@@ -16,11 +16,22 @@ public static class PartyEndpoints
     {
         var group = app.MapGroup("/api/parties").WithTags("Parties");
 
+        group.MapGet("/", ListParties);
         group.MapPost("/", CreateParty);
         group.MapPost("/join", JoinParty);
         group.MapGet("/{id:guid}", GetParty);
 
         return app;
+    }
+
+    private static async Task<IResult> ListParties(AppDbContext db)
+    {
+        var parties = await db.Parties
+            .OrderByDescending(p => p.CreatedAt)
+            .Select(p => new PartySummary(p.Id, p.Name, p.CreatedAt, p.Characters.Count))
+            .ToListAsync();
+
+        return Results.Ok(parties);
     }
 
     private static async Task<IResult> CreateParty(CreatePartyRequest request, AppDbContext db)

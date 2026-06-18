@@ -12,6 +12,9 @@ public record CoinPurseDto(int Copper, int Silver, int Electrum, int Gold, int P
 /// <summary>Lightweight view of a character within a party.</summary>
 public record CharacterSummary(Guid Id, string Name, string? Class, int? Level);
 
+/// <summary>Lightweight party listing for discovery (no join code).</summary>
+public record PartySummary(Guid Id, string Name, DateTimeOffset CreatedAt, int CharacterCount);
+
 /// <summary>Party details returned to clients.</summary>
 public record PartyResponse(
     Guid Id,

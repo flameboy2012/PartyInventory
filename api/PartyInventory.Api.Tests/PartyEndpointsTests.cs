@@ -42,6 +42,21 @@ public class PartyEndpointsTests(ApiFactory factory)
     }
 
     [Fact]
+    public async Task ListParties_IncludesCreatedParty_WithoutJoinCode()
+    {
+        var created = await CreatePartyAsync("Listed Party");
+
+        var response = await _client.GetAsync("/api/parties");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var parties = await response.Content.ReadFromJsonAsync<List<PartySummary>>();
+        Assert.NotNull(parties);
+        var listed = Assert.Single(parties!, p => p.Id == created.Id);
+        Assert.Equal("Listed Party", listed.Name);
+        Assert.Equal(0, listed.CharacterCount);
+    }
+
+    [Fact]
     public async Task JoinParty_WithValidCode_ReturnsSameParty()
     {
         var created = await CreatePartyAsync("Join Target");
