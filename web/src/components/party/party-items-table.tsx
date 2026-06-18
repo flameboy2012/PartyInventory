@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useApi } from "@/components/api-provider";
+import { EditItemDialog } from "@/components/party/edit-item-dialog";
 import { MoveItemDialog } from "@/components/party/move-item-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ export function PartyItemsTable({
 }) {
   const api = useApi();
   const [movingItem, setMovingItem] = useState<ItemResponse | null>(null);
+  const [editingItem, setEditingItem] = useState<ItemResponse | null>(null);
 
   async function handleDelete(itemId: string) {
     await api.DELETE("/api/parties/{partyId}/items/{itemId}", {
@@ -58,7 +60,16 @@ export function PartyItemsTable({
         <TableBody>
           {items.map((item) => (
             <TableRow key={item.id}>
-              <TableCell className="font-medium">{item.name}</TableCell>
+              <TableCell className="font-medium">
+                <span className="inline-flex items-center gap-2">
+                  {item.name}
+                  {item.equipped && (
+                    <Badge variant="secondary" className="text-xs">
+                      Equipped
+                    </Badge>
+                  )}
+                </span>
+              </TableCell>
               <TableCell className="text-muted-foreground">{item.type}</TableCell>
               <TableCell>
                 <Badge variant="outline">{item.rarity}</Badge>
@@ -69,6 +80,9 @@ export function PartyItemsTable({
               </TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-1">
+                  <Button variant="ghost" size="sm" onClick={() => setEditingItem(item)}>
+                    Edit
+                  </Button>
                   <Button variant="ghost" size="sm" onClick={() => setMovingItem(item)}>
                     Move
                   </Button>
@@ -81,6 +95,18 @@ export function PartyItemsTable({
           ))}
         </TableBody>
       </Table>
+
+      {editingItem && (
+        <EditItemDialog
+          partyId={partyId}
+          item={editingItem}
+          onSaved={() => {
+            onChanged();
+            setEditingItem(null);
+          }}
+          onClose={() => setEditingItem(null)}
+        />
+      )}
 
       {movingItem && (
         <MoveItemDialog

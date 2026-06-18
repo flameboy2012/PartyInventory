@@ -37,7 +37,8 @@ for the product spec and data model.
 - [x] **Party view** — header (name, share code, characters, party gold) + items table; add character / add item / delete item
 - [ ] **Stash** — list/add/edit/move/delete items in the shared stash
 - [x] **Character inventory** — per-character items via tab strip on the party page (coins editing still TODO)
-- [ ] **Item editor** — add/edit form (name, qty, value, weight, type, rarity, equipped, location)
+- [x] **Item editor** — add + edit dialogs (name, qty, value, weight, type, rarity, equipped); location changes via Move
+- [ ] Tidy up the items table actions — Edit/Move/Delete are cramped inline; consolidate into a row dropdown / kebab menu
 - [x] **Move item** — Move button opens a destination picker; drag-drop onto tabs is a later enhancement
 - [ ] Loading / error / empty states throughout
 

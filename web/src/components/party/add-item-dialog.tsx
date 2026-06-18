@@ -21,24 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { ItemRarity, ItemType } from "@/lib/api/types";
-
-const ITEM_TYPES: ItemType[] = [
-  "Weapon",
-  "Armor",
-  "Potion",
-  "Scroll",
-  "Gear",
-  "Treasure",
-  "Other",
-];
-const ITEM_RARITIES: ItemRarity[] = [
-  "Common",
-  "Uncommon",
-  "Rare",
-  "VeryRare",
-  "Legendary",
-  "Artifact",
-];
+import { ITEM_RARITIES, ITEM_TYPES } from "@/lib/item-options";
 
 export function AddItemDialog({
   partyId,
