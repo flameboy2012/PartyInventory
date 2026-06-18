@@ -16,10 +16,18 @@ public static class PartyEndpoints
     {
         var group = app.MapGroup("/api/parties").WithTags("Parties");
 
-        group.MapGet("/", ListParties);
-        group.MapPost("/", CreateParty);
-        group.MapPost("/join", JoinParty);
-        group.MapGet("/{id:guid}", GetParty);
+        group.MapGet("/", ListParties)
+             .Produces<List<PartySummary>>();
+        group.MapPost("/", CreateParty)
+             .Produces<PartyResponse>(StatusCodes.Status201Created)
+             .ProducesValidationProblem();
+        group.MapPost("/join", JoinParty)
+             .Produces<PartyResponse>()
+             .ProducesValidationProblem()
+             .Produces(StatusCodes.Status404NotFound);
+        group.MapGet("/{id:guid}", GetParty)
+             .Produces<PartyResponse>()
+             .Produces(StatusCodes.Status404NotFound);
 
         return app;
     }

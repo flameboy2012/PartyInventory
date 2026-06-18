@@ -11,11 +11,23 @@ public static class CharacterEndpoints
     {
         var group = app.MapGroup("/api/parties/{partyId:guid}/characters").WithTags("Characters");
 
-        group.MapGet("/", ListCharacters);
-        group.MapGet("/{characterId:guid}", GetCharacter);
-        group.MapPost("/", CreateCharacter);
-        group.MapPut("/{characterId:guid}", UpdateCharacter);
-        group.MapDelete("/{characterId:guid}", DeleteCharacter);
+        group.MapGet("/", ListCharacters)
+             .Produces<List<CharacterResponse>>()
+             .Produces(StatusCodes.Status404NotFound);
+        group.MapGet("/{characterId:guid}", GetCharacter)
+             .Produces<CharacterResponse>()
+             .Produces(StatusCodes.Status404NotFound);
+        group.MapPost("/", CreateCharacter)
+             .Produces<CharacterResponse>(StatusCodes.Status201Created)
+             .ProducesValidationProblem()
+             .Produces(StatusCodes.Status404NotFound);
+        group.MapPut("/{characterId:guid}", UpdateCharacter)
+             .Produces<CharacterResponse>()
+             .ProducesValidationProblem()
+             .Produces(StatusCodes.Status404NotFound);
+        group.MapDelete("/{characterId:guid}", DeleteCharacter)
+             .Produces(StatusCodes.Status204NoContent)
+             .Produces(StatusCodes.Status404NotFound);
 
         return app;
     }

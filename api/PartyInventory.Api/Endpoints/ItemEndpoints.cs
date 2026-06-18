@@ -11,14 +11,29 @@ public static class ItemEndpoints
     {
         var group = app.MapGroup("/api/parties/{partyId:guid}/items").WithTags("Items");
 
-        group.MapGet("/", ListItems);
-        group.MapGet("/{itemId:guid}", GetItem);
-        group.MapPost("/", CreateItem);
-        group.MapPut("/{itemId:guid}", UpdateItem);
-        group.MapDelete("/{itemId:guid}", DeleteItem);
+        group.MapGet("/", ListItems)
+             .Produces<List<ItemResponse>>()
+             .Produces(StatusCodes.Status404NotFound);
+        group.MapGet("/{itemId:guid}", GetItem)
+             .Produces<ItemResponse>()
+             .Produces(StatusCodes.Status404NotFound);
+        group.MapPost("/", CreateItem)
+             .Produces<ItemResponse>(StatusCodes.Status201Created)
+             .ProducesValidationProblem()
+             .Produces(StatusCodes.Status404NotFound);
+        group.MapPut("/{itemId:guid}", UpdateItem)
+             .Produces<ItemResponse>()
+             .ProducesValidationProblem()
+             .Produces(StatusCodes.Status404NotFound);
+        group.MapDelete("/{itemId:guid}", DeleteItem)
+             .Produces(StatusCodes.Status204NoContent)
+             .Produces(StatusCodes.Status404NotFound);
 
         // Convenience read view of the party stash (shared coins + unheld items).
-        app.MapGet("/api/parties/{partyId:guid}/stash", GetStash).WithTags("Items");
+        app.MapGet("/api/parties/{partyId:guid}/stash", GetStash)
+           .WithTags("Items")
+           .Produces<StashResponse>()
+           .Produces(StatusCodes.Status404NotFound);
 
         return app;
     }
