@@ -50,7 +50,7 @@ export function MoveItemDialog({
         weight: item.weight,
         type: item.type,
         rarity: item.rarity,
-        equipped: item.equipped,
+        equipped: false, // moving to another inventory unequips the item
         characterId: destination === STASH ? null : destination,
       },
     });
