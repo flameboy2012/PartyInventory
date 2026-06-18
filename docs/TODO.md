@@ -25,10 +25,10 @@ for the product spec and data model.
 
 ### Setup
 - [x] OpenAPI snapshot test + committed `openapi/v1.json` (build types against a repo artifact)
-- [ ] Generate TS types from `openapi/v1.json` (openapi-typescript)
-- [ ] SWR setup (fetcher + provider)
-- [ ] shadcn/ui init
-- [ ] API client + base URL config (`NEXT_PUBLIC_API_BASE_URL`)
+- [x] Generate TS types from `openapi/v1.json` (openapi-typescript, `npm run gen:api`)
+- [x] SWR setup (fetcher + provider)
+- [x] shadcn/ui init
+- [x] API client + base URL config (`NEXT_PUBLIC_API_BASE_URL`)
 - [ ] Shared money helper (gp decimal → cp/sp/ep/gp/pp display)
 
 ### Pages / flows
