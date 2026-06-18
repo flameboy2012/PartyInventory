@@ -1,0 +1,23 @@
+# Local development services for the D&D Party Inventory app.
+# Start with: docker compose up -d
+services:
+  db:
+    image: postgres:17
+    container_name: party-inventory-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: party
+      POSTGRES_PASSWORD: party_dev_pw
+      POSTGRES_DB: party_inventory
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U party -d party_inventory"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
