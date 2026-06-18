@@ -60,7 +60,12 @@ export function PartyItemsSection({
         </div>
       </div>
 
-      <PartyItemsTable partyId={party.id} items={visibleItems} onChanged={onItemsChanged} />
+      <PartyItemsTable
+        partyId={party.id}
+        characters={party.characters}
+        items={visibleItems}
+        onChanged={onItemsChanged}
+      />
     </div>
   );
 }

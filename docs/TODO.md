@@ -38,7 +38,7 @@ for the product spec and data model.
 - [ ] **Stash** — list/add/edit/move/delete items in the shared stash
 - [x] **Character inventory** — per-character items via tab strip on the party page (coins editing still TODO)
 - [ ] **Item editor** — add/edit form (name, qty, value, weight, type, rarity, equipped, location)
-- [ ] **Move item** — between stash and characters (drag-drop or a picker)
+- [x] **Move item** — Move button opens a destination picker; drag-drop onto tabs is a later enhancement
 - [ ] Loading / error / empty states throughout
 
 ### Real-time
