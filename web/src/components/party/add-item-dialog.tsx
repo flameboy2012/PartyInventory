@@ -42,9 +42,13 @@ const ITEM_RARITIES: ItemRarity[] = [
 
 export function AddItemDialog({
   partyId,
+  characterId,
+  locationLabel,
   onAdded,
 }: {
   partyId: string;
+  characterId: string | null;
+  locationLabel: string;
   onAdded: () => void;
 }) {
   const api = useApi();
@@ -82,7 +86,7 @@ export function AddItemDialog({
         type,
         rarity,
         equipped: false,
-        characterId: null,
+        characterId,
       },
     });
     setSubmitting(false);
@@ -105,7 +109,7 @@ export function AddItemDialog({
           <form onSubmit={handleSubmit}>
             <DialogHeader>
               <DialogTitle>Add an item</DialogTitle>
-              <DialogDescription>Add an item to the party stash.</DialogDescription>
+              <DialogDescription>Add an item to {locationLabel}.</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">

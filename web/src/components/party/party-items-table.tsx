@@ -34,7 +34,7 @@ export function PartyItemsTable({
   if (items.length === 0) {
     return (
       <p className="py-8 text-center text-sm text-muted-foreground">
-        No items yet. Add one to the party stash.
+        No items here yet.
       </p>
     );
   }

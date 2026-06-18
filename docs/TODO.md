@@ -36,7 +36,7 @@ for the product spec and data model.
 - [x] **Landing** — your remembered parties (localStorage) + create / join-by-code dialogs
 - [x] **Party view** — header (name, share code, characters, party gold) + items table; add character / add item / delete item
 - [ ] **Stash** — list/add/edit/move/delete items in the shared stash
-- [ ] **Character inventory** — per-character items + coins
+- [x] **Character inventory** — per-character items via tab strip on the party page (coins editing still TODO)
 - [ ] **Item editor** — add/edit form (name, qty, value, weight, type, rarity, equipped, location)
 - [ ] **Move item** — between stash and characters (drag-drop or a picker)
 - [ ] Loading / error / empty states throughout

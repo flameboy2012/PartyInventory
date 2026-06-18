@@ -3,10 +3,8 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import useSWR from "swr";
-import { AddCharacterDialog } from "@/components/party/add-character-dialog";
-import { AddItemDialog } from "@/components/party/add-item-dialog";
 import { PartyHeader } from "@/components/party/party-header";
-import { PartyItemsTable } from "@/components/party/party-items-table";
+import { PartyItemsSection } from "@/components/party/party-items-section";
 import type { ItemResponse, PartyResponse } from "@/lib/api/types";
 
 export default function PartyPage() {
@@ -35,19 +33,11 @@ export default function PartyPage() {
       {party && (
         <div className="mt-4 space-y-6">
           <PartyHeader party={party} />
-
-          <div className="flex items-center justify-between gap-4">
-            <h2 className="text-sm font-medium text-muted-foreground">Party items</h2>
-            <div className="flex gap-2">
-              <AddCharacterDialog partyId={party.id} onAdded={() => mutateParty()} />
-              <AddItemDialog partyId={party.id} onAdded={() => mutateItems()} />
-            </div>
-          </div>
-
-          <PartyItemsTable
-            partyId={party.id}
+          <PartyItemsSection
+            party={party}
             items={items ?? []}
-            onChanged={() => mutateItems()}
+            onItemsChanged={() => mutateItems()}
+            onCharactersChanged={() => mutateParty()}
           />
         </div>
       )}
