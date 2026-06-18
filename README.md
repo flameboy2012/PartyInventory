@@ -49,6 +49,9 @@ cd api/PartyInventory.Api
 dotnet run
 ```
 
+In development, an interactive API explorer (Scalar) is available at **`/scalar`**
+(reading the OpenAPI document at `/openapi/v1.json`) for trying endpoints in the browser.
+
 ### 3. Run the frontend
 
 ```bash

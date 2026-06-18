@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PartyInventory.Api.Data;
 using PartyInventory.Api.Endpoints;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +18,8 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    // Browser API explorer (with "try it out") at /scalar, reading /openapi/v1.json.
+    app.MapScalarApiReference(options => options.WithTitle("Party Inventory API"));
 }
 
 app.UseHttpsRedirection();
