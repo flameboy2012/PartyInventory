@@ -34,7 +34,7 @@ for the product spec and data model.
 
 ### Pages / flows
 - [x] **Landing** — your remembered parties (localStorage) + create / join-by-code dialogs
-- [ ] **Party view** — overview of the stash + characters, with coins
+- [x] **Party view** — header (name, share code, characters, party gold) + items table; add character / add item / delete item
 - [ ] **Stash** — list/add/edit/move/delete items in the shared stash
 - [ ] **Character inventory** — per-character items + coins
 - [ ] **Item editor** — add/edit form (name, qty, value, weight, type, rarity, equipped, location)

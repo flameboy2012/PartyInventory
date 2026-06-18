@@ -3,11 +3,23 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import useSWR from "swr";
-import type { PartyResponse } from "@/lib/api/types";
+import { AddCharacterDialog } from "@/components/party/add-character-dialog";
+import { AddItemDialog } from "@/components/party/add-item-dialog";
+import { PartyHeader } from "@/components/party/party-header";
+import { PartyItemsTable } from "@/components/party/party-items-table";
+import type { ItemResponse, PartyResponse } from "@/lib/api/types";
 
 export default function PartyPage() {
   const { id } = useParams<{ id: string }>();
-  const { data: party, error, isLoading } = useSWR<PartyResponse>(`/api/parties/${id}`);
+  const {
+    data: party,
+    error: partyError,
+    isLoading: partyLoading,
+    mutate: mutateParty,
+  } = useSWR<PartyResponse>(`/api/parties/${id}`);
+  const { data: items, mutate: mutateItems } = useSWR<ItemResponse[]>(
+    `/api/parties/${id}/items`,
+  );
 
   return (
     <main className="mx-auto w-full max-w-3xl px-6 py-12">
@@ -15,19 +27,28 @@ export default function PartyPage() {
         ← All parties
       </Link>
 
-      {isLoading && <p className="mt-8 text-sm text-muted-foreground">Loading…</p>}
-      {error && <p className="mt-8 text-sm text-destructive">Couldn&apos;t load this party.</p>}
+      {partyLoading && <p className="mt-8 text-sm text-muted-foreground">Loading…</p>}
+      {partyError && (
+        <p className="mt-8 text-sm text-destructive">Couldn&apos;t load this party.</p>
+      )}
 
       {party && (
-        <div className="mt-4">
-          <h1 className="text-2xl font-semibold tracking-tight">{party.name}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Share code:{" "}
-            <span className="font-mono font-medium text-foreground">{party.joinCode}</span>
-          </p>
-          <p className="mt-8 text-sm text-muted-foreground">
-            {party.characters.length} character(s). The full inventory UI is coming next.
-          </p>
+        <div className="mt-4 space-y-6">
+          <PartyHeader party={party} />
+
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="text-sm font-medium text-muted-foreground">Party items</h2>
+            <div className="flex gap-2">
+              <AddCharacterDialog partyId={party.id} onAdded={() => mutateParty()} />
+              <AddItemDialog partyId={party.id} onAdded={() => mutateItems()} />
+            </div>
+          </div>
+
+          <PartyItemsTable
+            partyId={party.id}
+            items={items ?? []}
+            onChanged={() => mutateItems()}
+          />
         </div>
       )}
     </main>
