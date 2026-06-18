@@ -36,6 +36,7 @@ export function EditItemDialog({
   onClose: () => void;
 }) {
   const api = useApi();
+  const inStash = item.characterId == null;
   const [name, setName] = useState(item.name);
   const [quantity, setQuantity] = useState(String(item.quantity));
   const [type, setType] = useState<ItemType>(item.type);
@@ -60,7 +61,7 @@ export function EditItemDialog({
         weight: Number(weight) || 0,
         type,
         rarity,
-        equipped,
+        equipped: inStash ? false : equipped, // stash items can't be equipped
         characterId: item.characterId, // editing keeps the item's location; use Move to relocate
       },
     });
@@ -163,13 +164,26 @@ export function EditItemDialog({
                 />
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="edit-equipped"
-                checked={equipped}
-                onCheckedChange={(value) => setEquipped(value === true)}
-              />
-              <Label htmlFor="edit-equipped">Equipped</Label>
+            <div className="grid gap-1">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="edit-equipped"
+                  checked={inStash ? false : equipped}
+                  disabled={inStash}
+                  onCheckedChange={(value) => setEquipped(value === true)}
+                />
+                <Label
+                  htmlFor="edit-equipped"
+                  className={inStash ? "text-muted-foreground" : undefined}
+                >
+                  Equipped
+                </Label>
+              </div>
+              {inStash && (
+                <p className="text-xs text-muted-foreground">
+                  Only items held by a character can be equipped.
+                </p>
+              )}
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
