@@ -20,6 +20,23 @@ internal static class CoinUpdates
             spend.Copper, spend.Silver, spend.Electrum, spend.Gold, spend.Platinum,
             "Spend amounts cannot be negative.");
 
+    public static Dictionary<string, string[]> ValidateTransfer(TransferCoinsRequest transfer) =>
+        ValidateNonNegative(
+            transfer.Copper, transfer.Silver, transfer.Electrum, transfer.Gold, transfer.Platinum,
+            "Transfer amounts cannot be negative.");
+
+    public static CoinPurseDto ToDto(CoinPurse purse) =>
+        new(purse.Copper, purse.Silver, purse.Electrum, purse.Gold, purse.Platinum);
+
+    public static void Add(CoinPurse purse, int copper, int silver, int electrum, int gold, int platinum)
+    {
+        purse.Copper += copper;
+        purse.Silver += silver;
+        purse.Electrum += electrum;
+        purse.Gold += gold;
+        purse.Platinum += platinum;
+    }
+
     public static void Apply(CoinPurse purse, CoinPurseDto coins)
     {
         purse.Copper = coins.Copper;

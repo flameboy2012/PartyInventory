@@ -361,6 +361,63 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/parties/{id}/coins/transfer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["TransferCoinsRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TransferCoinsResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/parties/{partyId}/characters": {
         parameters: {
             query?: never;
@@ -1008,6 +1065,26 @@ export interface components {
         StashResponse: {
             coins: components["schemas"]["CoinPurseDto"];
             items: components["schemas"]["ItemResponse"][];
+        };
+        TransferCoinsRequest: {
+            /** Format: uuid */
+            fromCharacterId: null | string;
+            /** Format: uuid */
+            toCharacterId: null | string;
+            /** Format: int32 */
+            copper: number | string;
+            /** Format: int32 */
+            silver: number | string;
+            /** Format: int32 */
+            electrum: number | string;
+            /** Format: int32 */
+            gold: number | string;
+            /** Format: int32 */
+            platinum: number | string;
+        };
+        TransferCoinsResponse: {
+            from: components["schemas"]["CoinPurseDto"];
+            to: components["schemas"]["CoinPurseDto"];
         };
         UpdateCharacterRequest: {
             name: string;

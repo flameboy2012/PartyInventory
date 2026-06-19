@@ -36,6 +36,10 @@ public static class PartyEndpoints
              .Produces<PartyResponse>()
              .ProducesValidationProblem()
              .Produces(StatusCodes.Status404NotFound);
+        group.MapPost("/{id:guid}/coins/transfer", TransferCoins)
+             .Produces<TransferCoinsResponse>()
+             .ProducesValidationProblem()
+             .Produces(StatusCodes.Status404NotFound);
 
         return app;
     }
@@ -157,6 +161,71 @@ public static class PartyEndpoints
         await db.SaveChangesAsync();
         return Results.Ok(ToResponse(party));
     }
+
+    private static async Task<IResult> TransferCoins(Guid id, TransferCoinsRequest request, AppDbContext db)
+    {
+        var errors = CoinUpdates.ValidateTransfer(request);
+        if (errors.Count > 0)
+        {
+            return Results.ValidationProblem(errors);
+        }
+
+        if (request.FromCharacterId == request.ToCharacterId)
+        {
+            return Results.ValidationProblem(new Dictionary<string, string[]>
+            {
+                ["toCharacterId"] = ["The source and destination must be different."]
+            });
+        }
+
+        var party = await db.Parties
+            .Include(p => p.Characters)
+            .FirstOrDefaultAsync(p => p.Id == id);
+
+        if (party is null)
+        {
+            return Results.NotFound();
+        }
+
+        var source = ResolvePurse(party, request.FromCharacterId);
+        if (source is null)
+        {
+            return Results.ValidationProblem(new Dictionary<string, string[]>
+            {
+                ["fromCharacterId"] = ["Character not found in this party."]
+            });
+        }
+
+        var destination = ResolvePurse(party, request.ToCharacterId);
+        if (destination is null)
+        {
+            return Results.ValidationProblem(new Dictionary<string, string[]>
+            {
+                ["toCharacterId"] = ["Character not found in this party."]
+            });
+        }
+
+        var spend = new SpendCoinsRequest(
+            request.Copper, request.Silver, request.Electrum, request.Gold, request.Platinum);
+        if (!CoinUpdates.TrySpend(source, spend))
+        {
+            return Results.ValidationProblem(new Dictionary<string, string[]>
+            {
+                ["coins"] = ["The source purse doesn't have enough coins for that."]
+            });
+        }
+
+        CoinUpdates.Add(
+            destination, request.Copper, request.Silver, request.Electrum, request.Gold, request.Platinum);
+        await db.SaveChangesAsync();
+
+        return Results.Ok(new TransferCoinsResponse(CoinUpdates.ToDto(source), CoinUpdates.ToDto(destination)));
+    }
+
+    private static CoinPurse? ResolvePurse(Party party, Guid? characterId) =>
+        characterId is null
+            ? party.Coins
+            : party.Characters.FirstOrDefault(c => c.Id == characterId)?.Coins;
 
     private static async Task<string> GenerateUniqueJoinCodeAsync(AppDbContext db)
     {

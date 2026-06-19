@@ -154,6 +154,88 @@ public class CoinEndpointsTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
+    [Fact]
+    public async Task TransferCoins_FromStashToCharacter()
+    {
+        var party = await CreatePartyAsync("Bank");
+        var character = await CreateCharacterAsync(party.Id, "Saver");
+        await SetCoinsAsync($"/api/parties/{party.Id}/coins", new { gold = 10 });
+
+        var response = await _client.PostAsJsonAsync(
+            $"/api/parties/{party.Id}/coins/transfer",
+            new { fromCharacterId = (Guid?)null, toCharacterId = character.Id, gold = 4 });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<TransferCoinsResponse>();
+        Assert.Equal(6, result!.From.Gold); // stash 10 - 4
+        Assert.Equal(4, result.To.Gold); // character + 4
+    }
+
+    [Fact]
+    public async Task TransferCoins_BreaksSourceDenomination()
+    {
+        var party = await CreatePartyAsync("Breaker");
+        var character = await CreateCharacterAsync(party.Id, "Receiver");
+        await SetCoinsAsync($"/api/parties/{party.Id}/coins", new { gold = 5 });
+
+        var response = await _client.PostAsJsonAsync(
+            $"/api/parties/{party.Id}/coins/transfer",
+            new { fromCharacterId = (Guid?)null, toCharacterId = character.Id, silver = 5 });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<TransferCoinsResponse>();
+        // source 5 gp, spend 5 sp -> 4 gp + 1 ep
+        Assert.Equal(4, result!.From.Gold);
+        Assert.Equal(1, result.From.Electrum);
+        // destination gains 5 sp
+        Assert.Equal(5, result.To.Silver);
+    }
+
+    [Fact]
+    public async Task TransferCoins_FromCharacterToStash()
+    {
+        var party = await CreatePartyAsync("Payback");
+        var character = await CreateCharacterAsync(party.Id, "Generous");
+        await SetCoinsAsync(
+            $"/api/parties/{party.Id}/characters/{character.Id}/coins",
+            new { gold = 8 });
+
+        var response = await _client.PostAsJsonAsync(
+            $"/api/parties/{party.Id}/coins/transfer",
+            new { fromCharacterId = character.Id, toCharacterId = (Guid?)null, gold = 3 });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<TransferCoinsResponse>();
+        Assert.Equal(5, result!.From.Gold); // character 8 - 3
+        Assert.Equal(3, result.To.Gold); // stash + 3
+    }
+
+    [Fact]
+    public async Task TransferCoins_WithInsufficientSource_ReturnsBadRequest()
+    {
+        var party = await CreatePartyAsync("Broke");
+        var character = await CreateCharacterAsync(party.Id, "Hopeful");
+        await SetCoinsAsync($"/api/parties/{party.Id}/coins", new { silver = 3 });
+
+        var response = await _client.PostAsJsonAsync(
+            $"/api/parties/{party.Id}/coins/transfer",
+            new { fromCharacterId = (Guid?)null, toCharacterId = character.Id, gold = 1 });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task TransferCoins_ToSamePurse_ReturnsBadRequest()
+    {
+        var party = await CreatePartyAsync("Self");
+
+        var response = await _client.PostAsJsonAsync(
+            $"/api/parties/{party.Id}/coins/transfer",
+            new { fromCharacterId = (Guid?)null, toCharacterId = (Guid?)null, gold = 1 });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
     private async Task SetCoinsAsync(string url, object coins)
     {
         var response = await _client.PutAsJsonAsync(url, coins);

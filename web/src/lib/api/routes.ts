@@ -10,6 +10,7 @@ const ENTRIES: { method: string; source: string }[] = [
   { method: "GET", source: "^/api/parties/[^/]+/characters$" },
   { method: "POST", source: "^/api/parties/[^/]+/characters$" },
   { method: "POST", source: "^/api/parties/[^/]+/coins/spend$" },
+  { method: "POST", source: "^/api/parties/[^/]+/coins/transfer$" },
   { method: "PUT", source: "^/api/parties/[^/]+/coins$" },
   { method: "DELETE", source: "^/api/parties/[^/]+/items/[^/]+$" },
   { method: "GET", source: "^/api/parties/[^/]+/items/[^/]+$" },

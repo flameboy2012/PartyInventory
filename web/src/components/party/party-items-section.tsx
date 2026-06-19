@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Minus, Plus } from "lucide-react";
+import { ArrowLeftRight, Minus, Plus } from "lucide-react";
 import { AddCharacterDialog } from "@/components/party/add-character-dialog";
 import { AddItemDialog } from "@/components/party/add-item-dialog";
 import { CoinsDialog } from "@/components/party/coins-dialog";
+import { TransferCoinsDialog } from "@/components/party/transfer-coins-dialog";
 import { PartyItemsTable } from "@/components/party/party-items-table";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -30,6 +31,7 @@ export function PartyItemsSection({
 }) {
   const [active, setActive] = useState<string>(STASH);
   const [coinMode, setCoinMode] = useState<"add" | "spend" | null>(null);
+  const [transferOpen, setTransferOpen] = useState(false);
 
   // Fall back to the stash if the active character was removed.
   const activeTab =
@@ -46,6 +48,11 @@ export function PartyItemsSection({
       ? item.characterId == null
       : item.characterId === activeCharacterId,
   );
+
+  const transferDestinations = [
+    { value: STASH, label: "Party stash" },
+    ...characters.map((c) => ({ value: c.id, label: c.name })),
+  ].filter((purse) => purse.value !== activeTab);
 
   return (
     <div className="space-y-4">
@@ -91,6 +98,16 @@ export function PartyItemsSection({
           >
             <Minus />
           </Button>
+          {transferDestinations.length > 0 && (
+            <Button
+              variant="outline"
+              size="icon-sm"
+              aria-label="Transfer coins"
+              onClick={() => setTransferOpen(true)}
+            >
+              <ArrowLeftRight />
+            </Button>
+          )}
         </div>
       </div>
 
@@ -109,6 +126,19 @@ export function PartyItemsSection({
           current={activeCoins}
           onDone={onCoinsChanged}
           onClose={() => setCoinMode(null)}
+        />
+      )}
+
+      {transferOpen && (
+        <TransferCoinsDialog
+          partyId={party.id}
+          fromCharacterId={activeCharacterId}
+          destinations={transferDestinations}
+          onDone={() => {
+            onPartyChanged();
+            onCharactersChanged();
+          }}
+          onClose={() => setTransferOpen(false)}
         />
       )}
     </div>

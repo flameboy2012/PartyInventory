@@ -17,7 +17,7 @@ for the product spec and data model.
 
 - [x] **CORS** — added for direct browser calls, then **removed** once the BFF made it unnecessary
 - [ ] **SignalR** — per-party hub group; broadcast item & character changes for live sync
-- [x] **Coin management** — set (`PUT .../coins`) + spend (`POST .../coins/spend`, auto-breaks higher denominations, errors only if total too low) for the stash and characters
+- [x] **Coin management** — set (`PUT .../coins`), spend (`POST .../coins/spend`, auto-breaks higher denominations), and transfer between purses (`POST .../coins/transfer`, atomic) for the stash and characters
 - [ ] (stretch) Identity / claim-a-character → restricted per-character permissions
 - [ ] (stretch) DM / admin role
 - [x] Remember joined parties in browser storage — landing page lists only your created/joined parties (promoted from stretch: a global directory would leak ids and defeat the join code)
@@ -40,7 +40,7 @@ for the product spec and data model.
 - [x] **Item editor** — add + edit dialogs (name, qty, value, weight, type, rarity, equipped); location changes via Move
 - [x] Tidy up the items table actions — Edit/Move/Delete consolidated into a row kebab dropdown menu
 - [x] **Move item** — Move button opens a destination picker; drag-drop onto tabs is a later enhancement
-- [x] Coin editor UI — coins shown per tab with +/- buttons (add via set, spend via the spend endpoint) for the stash and each character
+- [x] Coin editor UI — coins shown per tab with add / spend / transfer buttons for the stash and each character
 - [ ] Loading / error / empty states throughout
 
 ### Real-time
