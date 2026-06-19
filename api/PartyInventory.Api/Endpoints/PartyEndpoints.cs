@@ -28,6 +28,14 @@ public static class PartyEndpoints
         group.MapGet("/{id:guid}", GetParty)
              .Produces<PartyResponse>()
              .Produces(StatusCodes.Status404NotFound);
+        group.MapPut("/{id:guid}/coins", UpdatePartyCoins)
+             .Produces<PartyResponse>()
+             .ProducesValidationProblem()
+             .Produces(StatusCodes.Status404NotFound);
+        group.MapPost("/{id:guid}/coins/spend", SpendPartyCoins)
+             .Produces<PartyResponse>()
+             .ProducesValidationProblem()
+             .Produces(StatusCodes.Status404NotFound);
 
         return app;
     }
@@ -96,6 +104,58 @@ public static class PartyEndpoints
             .FirstOrDefaultAsync(p => p.Id == id);
 
         return party is null ? Results.NotFound() : Results.Ok(ToResponse(party));
+    }
+
+    private static async Task<IResult> UpdatePartyCoins(Guid id, CoinPurseDto request, AppDbContext db)
+    {
+        var errors = CoinUpdates.Validate(request);
+        if (errors.Count > 0)
+        {
+            return Results.ValidationProblem(errors);
+        }
+
+        var party = await db.Parties
+            .Include(p => p.Characters)
+            .FirstOrDefaultAsync(p => p.Id == id);
+
+        if (party is null)
+        {
+            return Results.NotFound();
+        }
+
+        CoinUpdates.Apply(party.Coins, request);
+        await db.SaveChangesAsync();
+
+        return Results.Ok(ToResponse(party));
+    }
+
+    private static async Task<IResult> SpendPartyCoins(Guid id, SpendCoinsRequest request, AppDbContext db)
+    {
+        var errors = CoinUpdates.ValidateSpend(request);
+        if (errors.Count > 0)
+        {
+            return Results.ValidationProblem(errors);
+        }
+
+        var party = await db.Parties
+            .Include(p => p.Characters)
+            .FirstOrDefaultAsync(p => p.Id == id);
+
+        if (party is null)
+        {
+            return Results.NotFound();
+        }
+
+        if (!CoinUpdates.TrySpend(party.Coins, request))
+        {
+            return Results.ValidationProblem(new Dictionary<string, string[]>
+            {
+                ["spend"] = ["The stash doesn't have enough coins for that."]
+            });
+        }
+
+        await db.SaveChangesAsync();
+        return Results.Ok(ToResponse(party));
     }
 
     private static async Task<string> GenerateUniqueJoinCodeAsync(AppDbContext db)

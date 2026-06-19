@@ -74,6 +74,11 @@ Monetary **values** (e.g. item cost) are stored as a decimal of **gp**. A displa
 converts a gp amount into a cp/sp/ep/gp/pp breakdown for the UI (1 pp = 10 gp, 1 gp = 2 ep
 = 10 sp = 100 cp). Coins *held* (CoinPurse) are already discrete denominations.
 
+**Managing coins:** a purse (stash or character) can be **set** directly (`PUT .../coins`) or
+**spent** (`POST .../coins/spend`). Spending breaks higher denominations down to cover a
+shortfall (minimal-break, cascading up); it's rejected only if the purse's total value is
+too low.
+
 ## Stretch goals
 
 - **Identity** — players sign in / claim a character (browser-stored token or accounts).

@@ -28,6 +28,14 @@ public static class CharacterEndpoints
         group.MapDelete("/{characterId:guid}", DeleteCharacter)
              .Produces(StatusCodes.Status204NoContent)
              .Produces(StatusCodes.Status404NotFound);
+        group.MapPut("/{characterId:guid}/coins", UpdateCharacterCoins)
+             .Produces<CharacterResponse>()
+             .ProducesValidationProblem()
+             .Produces(StatusCodes.Status404NotFound);
+        group.MapPost("/{characterId:guid}/coins/spend", SpendCharacterCoins)
+             .Produces<CharacterResponse>()
+             .ProducesValidationProblem()
+             .Produces(StatusCodes.Status404NotFound);
 
         return app;
     }
@@ -107,6 +115,58 @@ public static class CharacterEndpoints
         character.Level = request.Level;
         await db.SaveChangesAsync();
 
+        return Results.Ok(ToResponse(character));
+    }
+
+    private static async Task<IResult> UpdateCharacterCoins(
+        Guid partyId, Guid characterId, CoinPurseDto request, AppDbContext db)
+    {
+        var errors = CoinUpdates.Validate(request);
+        if (errors.Count > 0)
+        {
+            return Results.ValidationProblem(errors);
+        }
+
+        var character = await db.Characters
+            .FirstOrDefaultAsync(c => c.Id == characterId && c.PartyId == partyId);
+
+        if (character is null)
+        {
+            return Results.NotFound();
+        }
+
+        CoinUpdates.Apply(character.Coins, request);
+        await db.SaveChangesAsync();
+
+        return Results.Ok(ToResponse(character));
+    }
+
+    private static async Task<IResult> SpendCharacterCoins(
+        Guid partyId, Guid characterId, SpendCoinsRequest request, AppDbContext db)
+    {
+        var errors = CoinUpdates.ValidateSpend(request);
+        if (errors.Count > 0)
+        {
+            return Results.ValidationProblem(errors);
+        }
+
+        var character = await db.Characters
+            .FirstOrDefaultAsync(c => c.Id == characterId && c.PartyId == partyId);
+
+        if (character is null)
+        {
+            return Results.NotFound();
+        }
+
+        if (!CoinUpdates.TrySpend(character.Coins, request))
+        {
+            return Results.ValidationProblem(new Dictionary<string, string[]>
+            {
+                ["spend"] = ["This character doesn't have enough coins for that."]
+            });
+        }
+
+        await db.SaveChangesAsync();
         return Results.Ok(ToResponse(character));
     }
 
