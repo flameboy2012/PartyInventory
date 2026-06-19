@@ -57,9 +57,9 @@ for the product spec and data model.
 
 ### Full-stack Docker
 - [x] Dockerfile for the API (.NET 10 multi-stage: SDK build → runtime image)
-- [ ] Dockerfile for the web app (Next.js standalone output, multi-stage)
-- [x] Add the **api** service to `docker-compose.yml` (build, depends_on db healthy, port 5140→8080) — web service still TODO
-  - [x] Wire env: api connection string → the `db` service (web `API_BASE_URL` → `http://api:<port>` comes with the web service)
+- [x] Dockerfile for the web app (Next.js standalone output, multi-stage)
+- [x] Add the **api + web** services to `docker-compose.yml` (build, depends_on, ports 5140→8080 / 3000→3000)
+  - [x] Wire env: api connection string → the `db` service; web `API_BASE_URL` → `http://api:8080`
   - [x] Apply EF migrations on API startup (guarded by `ApplyMigrationsAtStartup`, enabled in compose)
 - [ ] `docker compose watch` (`develop.watch`) for hot reload — sync source into the containers, rebuild on dependency changes
 - [ ] Goal: whole stack up with a single `docker compose up` / `docker compose watch`

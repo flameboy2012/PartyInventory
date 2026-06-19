@@ -35,6 +35,19 @@ services:
       db:
         condition: service_healthy
 
+  web:
+    build:
+      context: ./web
+    container_name: party-inventory-web
+    restart: unless-stopped
+    environment:
+      # Server-side base URL for the BFF proxy — reaches the api over the compose network.
+      API_BASE_URL: http://api:8080
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: party-inventory-pgadmin
