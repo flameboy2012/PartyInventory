@@ -22,7 +22,9 @@ type Context = { params: Promise<{ path: string[] }> };
 async function proxy(request: Request, segments: string[]) {
   const apiPath = `/api/${segments.join("/")}`;
 
-  if (!isAllowedRoute(request.method, apiPath)) {
+  // The SignalR hub isn't part of the OpenAPI surface; allow its sub-paths through.
+  const isHub = apiPath.startsWith("/api/hubs/");
+  if (!isHub && !isAllowedRoute(request.method, apiPath)) {
     return Response.json({ message: "Unknown API route." }, { status: 404 });
   }
 

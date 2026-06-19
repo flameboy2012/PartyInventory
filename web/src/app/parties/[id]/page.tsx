@@ -6,6 +6,7 @@ import useSWR from "swr";
 import { PartyHeader } from "@/components/party/party-header";
 import { PartyItemsSection } from "@/components/party/party-items-section";
 import type { CharacterResponse, ItemResponse, PartyResponse } from "@/lib/api/types";
+import { usePartyRealtime } from "@/lib/use-party-realtime";
 
 export default function PartyPage() {
   const { id } = useParams<{ id: string }>();
@@ -21,6 +22,13 @@ export default function PartyPage() {
   const { data: items, mutate: mutateItems } = useSWR<ItemResponse[]>(
     `/api/parties/${id}/items`,
   );
+
+  // Revalidate everything when another player changes this party.
+  usePartyRealtime(id, () => {
+    void mutateParty();
+    void mutateCharacters();
+    void mutateItems();
+  });
 
   return (
     <main className="mx-auto w-full max-w-3xl px-6 py-12">

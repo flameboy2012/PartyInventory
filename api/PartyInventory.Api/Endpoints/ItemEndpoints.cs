@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using PartyInventory.Api.Contracts;
 using PartyInventory.Api.Data;
 using PartyInventory.Api.Domain;
+using PartyInventory.Api.Realtime;
 
 namespace PartyInventory.Api.Endpoints;
 
@@ -66,7 +67,8 @@ public static class ItemEndpoints
         return item is null ? Results.NotFound() : Results.Ok(ToResponse(item));
     }
 
-    private static async Task<IResult> CreateItem(Guid partyId, CreateItemRequest request, AppDbContext db)
+    private static async Task<IResult> CreateItem(
+        Guid partyId, CreateItemRequest request, AppDbContext db, IPartyNotifier notifier)
     {
         var errors = Validate(request.Name, request.Quantity, request.ValueGp, request.Weight);
         if (errors.Count > 0)
@@ -101,11 +103,13 @@ public static class ItemEndpoints
 
         db.Items.Add(item);
         await db.SaveChangesAsync();
+        await notifier.PartyChanged(partyId);
 
         return Results.Created($"/api/parties/{partyId}/items/{item.Id}", ToResponse(item));
     }
 
-    private static async Task<IResult> UpdateItem(Guid partyId, Guid itemId, UpdateItemRequest request, AppDbContext db)
+    private static async Task<IResult> UpdateItem(
+        Guid partyId, Guid itemId, UpdateItemRequest request, AppDbContext db, IPartyNotifier notifier)
     {
         var errors = Validate(request.Name, request.Quantity, request.ValueGp, request.Weight);
         if (errors.Count > 0)
@@ -134,11 +138,13 @@ public static class ItemEndpoints
         item.Equipped = request.Equipped;
         item.CharacterId = request.CharacterId; // move (null = stash)
         await db.SaveChangesAsync();
+        await notifier.PartyChanged(partyId);
 
         return Results.Ok(ToResponse(item));
     }
 
-    private static async Task<IResult> DeleteItem(Guid partyId, Guid itemId, AppDbContext db)
+    private static async Task<IResult> DeleteItem(
+        Guid partyId, Guid itemId, AppDbContext db, IPartyNotifier notifier)
     {
         var item = await db.Items.FirstOrDefaultAsync(i => i.Id == itemId && i.PartyId == partyId);
         if (item is null)
@@ -148,6 +154,7 @@ public static class ItemEndpoints
 
         db.Items.Remove(item);
         await db.SaveChangesAsync();
+        await notifier.PartyChanged(partyId);
         return Results.NoContent();
     }
 

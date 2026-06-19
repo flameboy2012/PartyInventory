@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using PartyInventory.Api.Contracts;
 using PartyInventory.Api.Data;
 using PartyInventory.Api.Domain;
+using PartyInventory.Api.Realtime;
 
 namespace PartyInventory.Api.Endpoints;
 
@@ -63,7 +64,8 @@ public static class CharacterEndpoints
         return character is null ? Results.NotFound() : Results.Ok(ToResponse(character));
     }
 
-    private static async Task<IResult> CreateCharacter(Guid partyId, CreateCharacterRequest request, AppDbContext db)
+    private static async Task<IResult> CreateCharacter(
+        Guid partyId, CreateCharacterRequest request, AppDbContext db, IPartyNotifier notifier)
     {
         var errors = Validate(request.Name, request.Level);
         if (errors.Count > 0)
@@ -87,6 +89,7 @@ public static class CharacterEndpoints
 
         db.Characters.Add(character);
         await db.SaveChangesAsync();
+        await notifier.PartyChanged(partyId);
 
         return Results.Created(
             $"/api/parties/{partyId}/characters/{character.Id}",
@@ -94,7 +97,8 @@ public static class CharacterEndpoints
     }
 
     private static async Task<IResult> UpdateCharacter(
-        Guid partyId, Guid characterId, UpdateCharacterRequest request, AppDbContext db)
+        Guid partyId, Guid characterId, UpdateCharacterRequest request, AppDbContext db,
+        IPartyNotifier notifier)
     {
         var errors = Validate(request.Name, request.Level);
         if (errors.Count > 0)
@@ -114,12 +118,13 @@ public static class CharacterEndpoints
         character.Class = Normalize(request.Class);
         character.Level = request.Level;
         await db.SaveChangesAsync();
+        await notifier.PartyChanged(partyId);
 
         return Results.Ok(ToResponse(character));
     }
 
     private static async Task<IResult> UpdateCharacterCoins(
-        Guid partyId, Guid characterId, CoinPurseDto request, AppDbContext db)
+        Guid partyId, Guid characterId, CoinPurseDto request, AppDbContext db, IPartyNotifier notifier)
     {
         var errors = CoinUpdates.Validate(request);
         if (errors.Count > 0)
@@ -137,12 +142,13 @@ public static class CharacterEndpoints
 
         CoinUpdates.Apply(character.Coins, request);
         await db.SaveChangesAsync();
+        await notifier.PartyChanged(partyId);
 
         return Results.Ok(ToResponse(character));
     }
 
     private static async Task<IResult> SpendCharacterCoins(
-        Guid partyId, Guid characterId, SpendCoinsRequest request, AppDbContext db)
+        Guid partyId, Guid characterId, SpendCoinsRequest request, AppDbContext db, IPartyNotifier notifier)
     {
         var errors = CoinUpdates.ValidateSpend(request);
         if (errors.Count > 0)
@@ -167,10 +173,12 @@ public static class CharacterEndpoints
         }
 
         await db.SaveChangesAsync();
+        await notifier.PartyChanged(partyId);
         return Results.Ok(ToResponse(character));
     }
 
-    private static async Task<IResult> DeleteCharacter(Guid partyId, Guid characterId, AppDbContext db)
+    private static async Task<IResult> DeleteCharacter(
+        Guid partyId, Guid characterId, AppDbContext db, IPartyNotifier notifier)
     {
         var character = await db.Characters
             .FirstOrDefaultAsync(c => c.Id == characterId && c.PartyId == partyId);
@@ -183,6 +191,7 @@ public static class CharacterEndpoints
         // Items owned by this character fall back to the party stash (FK is ON DELETE SET NULL).
         db.Characters.Remove(character);
         await db.SaveChangesAsync();
+        await notifier.PartyChanged(partyId);
 
         return Results.NoContent();
     }

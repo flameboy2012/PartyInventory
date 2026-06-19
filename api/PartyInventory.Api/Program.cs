@@ -2,6 +2,8 @@ using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using PartyInventory.Api.Data;
 using PartyInventory.Api.Endpoints;
+using PartyInventory.Api.Hubs;
+using PartyInventory.Api.Realtime;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,6 +18,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Serialize enums as their string names (e.g. "Weapon", "Rare") rather than integers.
 builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+
+builder.Services.AddSignalR();
+builder.Services.AddScoped<IPartyNotifier, PartyNotifier>();
 
 var app = builder.Build();
 
@@ -41,6 +46,7 @@ app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 app.MapPartyEndpoints();
 app.MapCharacterEndpoints();
 app.MapItemEndpoints();
+app.MapHub<PartyHub>("/api/hubs/party");
 
 app.Run();
 

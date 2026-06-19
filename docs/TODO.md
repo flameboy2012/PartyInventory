@@ -16,7 +16,7 @@ for the product spec and data model.
 ## Backend — remaining
 
 - [x] **CORS** — added for direct browser calls, then **removed** once the BFF made it unnecessary
-- [ ] **SignalR** — per-party hub group; broadcast item & character changes for live sync
+- [x] **SignalR** — per-party hub group; mutations broadcast a "partyChanged" ping (long-polling through the BFF; API stays private)
 - [x] **Coin management** — set (`PUT .../coins`), spend (`POST .../coins/spend`, auto-breaks higher denominations), and transfer between purses (`POST .../coins/transfer`, atomic) for the stash and characters
 - [ ] (stretch) Identity / claim-a-character → restricted per-character permissions
 - [ ] (stretch) DM / admin role
@@ -44,7 +44,7 @@ for the product spec and data model.
 - [ ] Loading / error / empty states throughout
 
 ### Real-time
-- [ ] SignalR client — join the party group, apply live updates (after backend SignalR lands)
+- [x] SignalR client — joins the party group over long-polling and revalidates SWR queries on a ping
 
 ## Architecture & infrastructure
 

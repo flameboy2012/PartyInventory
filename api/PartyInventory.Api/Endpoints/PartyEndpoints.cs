@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using PartyInventory.Api.Contracts;
 using PartyInventory.Api.Data;
 using PartyInventory.Api.Domain;
+using PartyInventory.Api.Realtime;
 
 namespace PartyInventory.Api.Endpoints;
 
@@ -110,7 +111,8 @@ public static class PartyEndpoints
         return party is null ? Results.NotFound() : Results.Ok(ToResponse(party));
     }
 
-    private static async Task<IResult> UpdatePartyCoins(Guid id, CoinPurseDto request, AppDbContext db)
+    private static async Task<IResult> UpdatePartyCoins(
+        Guid id, CoinPurseDto request, AppDbContext db, IPartyNotifier notifier)
     {
         var errors = CoinUpdates.Validate(request);
         if (errors.Count > 0)
@@ -129,11 +131,13 @@ public static class PartyEndpoints
 
         CoinUpdates.Apply(party.Coins, request);
         await db.SaveChangesAsync();
+        await notifier.PartyChanged(id);
 
         return Results.Ok(ToResponse(party));
     }
 
-    private static async Task<IResult> SpendPartyCoins(Guid id, SpendCoinsRequest request, AppDbContext db)
+    private static async Task<IResult> SpendPartyCoins(
+        Guid id, SpendCoinsRequest request, AppDbContext db, IPartyNotifier notifier)
     {
         var errors = CoinUpdates.ValidateSpend(request);
         if (errors.Count > 0)
@@ -159,10 +163,12 @@ public static class PartyEndpoints
         }
 
         await db.SaveChangesAsync();
+        await notifier.PartyChanged(id);
         return Results.Ok(ToResponse(party));
     }
 
-    private static async Task<IResult> TransferCoins(Guid id, TransferCoinsRequest request, AppDbContext db)
+    private static async Task<IResult> TransferCoins(
+        Guid id, TransferCoinsRequest request, AppDbContext db, IPartyNotifier notifier)
     {
         var errors = CoinUpdates.ValidateTransfer(request);
         if (errors.Count > 0)
@@ -218,6 +224,7 @@ public static class PartyEndpoints
         CoinUpdates.Add(
             destination, request.Copper, request.Silver, request.Electrum, request.Gold, request.Platinum);
         await db.SaveChangesAsync();
+        await notifier.PartyChanged(id);
 
         return Results.Ok(new TransferCoinsResponse(CoinUpdates.ToDto(source), CoinUpdates.ToDto(destination)));
     }
