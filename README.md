@@ -51,11 +51,14 @@ over the internal Docker network (`http://api:8080`).
 ### Hot reload while developing
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.dev.yml watch
+npm run dev
 ```
 
-Runs the API (`dotnet watch`) and web (`next dev`) in dev mode and syncs source
-changes into the containers for hot reload.
+Shorthand (from the repo root) for
+`docker compose -f docker-compose.yml -f docker-compose.dev.yml watch` — runs the API
+(`dotnet watch`) and web (`next dev`) in dev mode and syncs source changes into the
+containers for hot reload. Root scripts: `npm run dev` (watch), `npm run up` / `npm run down`
+(start/stop the production stack), `npm run logs`.
 
 ### Or run pieces locally
 

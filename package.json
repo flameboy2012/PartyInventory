@@ -1,0 +1,11 @@
+{
+  "name": "party-inventory",
+  "private": true,
+  "description": "Root scripts for running the full Docker stack.",
+  "scripts": {
+    "dev": "docker compose -f docker-compose.yml -f docker-compose.dev.yml watch",
+    "up": "docker compose up --build -d",
+    "down": "docker compose down",
+    "logs": "docker compose logs -f"
+  }
+}
