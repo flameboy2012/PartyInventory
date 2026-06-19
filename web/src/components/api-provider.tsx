@@ -4,54 +4,36 @@ import { createContext, useContext, useMemo } from "react";
 import { SWRConfig } from "swr";
 import { createApiClient, type ApiClient } from "@/lib/api/client";
 
-type ApiContextValue = { baseUrl: string; client: ApiClient };
-
-const ApiContext = createContext<ApiContextValue | null>(null);
+const ApiContext = createContext<ApiClient | null>(null);
 
 /**
- * Provides the API base URL (resolved at request time on the server) to client
- * components, along with a typed API client and a default SWR fetcher.
+ * Default SWR fetcher. Calls are same-origin and go through the Next.js BFF
+ * proxy (app/api/[...path]), which forwards to the .NET API server-side.
  */
-export function ApiProvider({
-  baseUrl,
-  children,
-}: {
-  baseUrl: string;
-  children: React.ReactNode;
-}) {
-  const value = useMemo<ApiContextValue>(
-    () => ({ baseUrl, client: createApiClient(baseUrl) }),
-    [baseUrl],
-  );
+const fetcher = async (path: string) => {
+  const response = await fetch(path, { credentials: "include" });
+  if (!response.ok) {
+    throw new Error(`Request to ${path} failed (${response.status})`);
+  }
+  return response.json();
+};
 
-  const fetcher = useMemo(
-    () => async (path: string) => {
-      const res = await fetch(`${baseUrl}${path}`, { credentials: "include" });
-      if (!res.ok) {
-        throw new Error(`Request to ${path} failed (${res.status})`);
-      }
-      return res.json();
-    },
-    [baseUrl],
-  );
+export function ApiProvider({ children }: { children: React.ReactNode }) {
+  // Empty base URL → relative, same-origin requests to the BFF proxy.
+  const client = useMemo(() => createApiClient(""), []);
 
   return (
-    <ApiContext.Provider value={value}>
+    <ApiContext.Provider value={client}>
       <SWRConfig value={{ fetcher }}>{children}</SWRConfig>
     </ApiContext.Provider>
   );
 }
 
-function useApiContext(): ApiContextValue {
-  const ctx = useContext(ApiContext);
-  if (!ctx) {
-    throw new Error("useApi/useApiBaseUrl must be used within <ApiProvider>");
+/** The typed API client (openapi-fetch) that targets the same-origin BFF proxy. */
+export function useApi(): ApiClient {
+  const client = useContext(ApiContext);
+  if (!client) {
+    throw new Error("useApi must be used within <ApiProvider>");
   }
-  return ctx;
+  return client;
 }
-
-/** The typed API client (openapi-fetch) bound to the runtime base URL. */
-export const useApi = (): ApiClient => useApiContext().client;
-
-/** The runtime API base URL. */
-export const useApiBaseUrl = (): string => useApiContext().baseUrl;

@@ -2,11 +2,11 @@ import createClient from "openapi-fetch";
 import type { paths } from "./schema";
 
 /**
- * Create a typed API client bound to the given base URL.
+ * Create a typed API client for the given base URL.
  *
- * The base URL is supplied at runtime (read from process.env on the server and
- * passed to the client provider) rather than inlined at build time, so a single
- * build/Docker image can target different API hosts per environment.
+ * In the browser the base URL is empty (same-origin) so requests go through the
+ * Next.js BFF proxy at /api/*. The real .NET API base URL lives only on the
+ * server, in the proxy route handler.
  */
 export function createApiClient(baseUrl: string) {
   return createClient<paths>({ baseUrl });

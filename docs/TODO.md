@@ -48,12 +48,12 @@ for the product spec and data model.
 ## Architecture & infrastructure
 
 ### Frontend as a BFF (backend-for-frontend)
-- [ ] Route browser → API calls through the Next.js server instead of calling the .NET API directly from the browser
-  - [ ] Add Next.js route handler(s) under `app/api/...` that proxy/forward to the .NET API
-  - [ ] Browser calls same-origin Next.js endpoints — drops the need for browser CORS; the .NET API can stay internal
-  - [ ] `API_BASE_URL` becomes **server-only** (no longer passed to the client `ApiProvider`); SWR / openapi-fetch base URL becomes relative/same-origin
-  - [ ] Gives a server-side seam for future auth/session handling
-  - Note: pairs with full-stack Docker — the API only needs to be reachable on the internal Docker network
+- [x] Route browser → API calls through the Next.js server instead of calling the .NET API directly from the browser
+  - [x] Generic proxy route handler `app/api/[...path]/route.ts` (one export per verb) forwards to the .NET API
+  - [x] Validates the slug against the known API surface (generated `routes.ts` from the OpenAPI spec) before forwarding
+  - [x] Browser calls same-origin endpoints; `API_BASE_URL` is now server-only (read in the proxy), client uses a relative base URL
+  - [x] Server-side seam in place for future auth/session handling
+  - [ ] Follow-up: CORS on the API is now unnecessary for the browser — can be removed later
 
 ### Full-stack Docker
 - [ ] Dockerfile for the API (.NET 10 multi-stage: SDK build → runtime image)
