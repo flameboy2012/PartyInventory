@@ -19,6 +19,22 @@ services:
       timeout: 5s
       retries: 5
 
+  api:
+    build:
+      context: ./api/PartyInventory.Api
+    container_name: party-inventory-api
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__Default: Host=db;Port=5432;Database=party_inventory;Username=party;Password=party_dev_pw
+      ApplyMigrationsAtStartup: "true"
+    ports:
+      - "5140:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: party-inventory-pgadmin

@@ -19,6 +19,14 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 
 var app = builder.Build();
 
+// Optionally apply EF migrations on startup (enabled in the Docker/dev compose stack so the
+// container provisions its own schema). Off by default — tests and other hosts don't run it.
+if (app.Configuration.GetValue<bool>("ApplyMigrationsAtStartup"))
+{
+    using var scope = app.Services.CreateScope();
+    scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.Migrate();
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

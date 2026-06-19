@@ -56,11 +56,11 @@ for the product spec and data model.
   - [x] Removed CORS from the API — the browser never calls it directly anymore
 
 ### Full-stack Docker
-- [ ] Dockerfile for the API (.NET 10 multi-stage: SDK build → runtime image)
+- [x] Dockerfile for the API (.NET 10 multi-stage: SDK build → runtime image)
 - [ ] Dockerfile for the web app (Next.js standalone output, multi-stage)
-- [ ] Extend `docker-compose.yml` to run **api + web** alongside `db` (and `pgadmin`)
-  - [ ] Wire env: web `API_BASE_URL` → `http://api:<port>`; api connection string → the `db` service
-  - [ ] Apply EF migrations on API startup (or a dedicated migration step)
+- [x] Add the **api** service to `docker-compose.yml` (build, depends_on db healthy, port 5140→8080) — web service still TODO
+  - [x] Wire env: api connection string → the `db` service (web `API_BASE_URL` → `http://api:<port>` comes with the web service)
+  - [x] Apply EF migrations on API startup (guarded by `ApplyMigrationsAtStartup`, enabled in compose)
 - [ ] `docker compose watch` (`develop.watch`) for hot reload — sync source into the containers, rebuild on dependency changes
 - [ ] Goal: whole stack up with a single `docker compose up` / `docker compose watch`
 
