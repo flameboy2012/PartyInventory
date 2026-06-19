@@ -17,17 +17,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
-// Allow the frontend origin(s) to call the API. AllowCredentials is set so the same policy
-// works for authenticated SignalR connections later.
-var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-    ?? ["http://localhost:3000"];
-builder.Services.AddCors(options =>
-    options.AddDefaultPolicy(policy =>
-        policy.WithOrigins(corsOrigins)
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials()));
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -39,8 +28,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-app.UseCors();
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 app.MapPartyEndpoints();

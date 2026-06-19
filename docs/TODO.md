@@ -15,7 +15,7 @@ for the product spec and data model.
 
 ## Backend — remaining
 
-- [x] **CORS** — allow the frontend origin (`http://localhost:3000`) to call the API
+- [x] **CORS** — added for direct browser calls, then **removed** once the BFF made it unnecessary
 - [ ] **SignalR** — per-party hub group; broadcast item & character changes for live sync
 - [ ] **Coin management** — endpoints to adjust stash and character purses
 - [ ] (stretch) Identity / claim-a-character → restricted per-character permissions
@@ -53,7 +53,7 @@ for the product spec and data model.
   - [x] Validates the slug against the known API surface (generated `routes.ts` from the OpenAPI spec) before forwarding
   - [x] Browser calls same-origin endpoints; `API_BASE_URL` is now server-only (read in the proxy), client uses a relative base URL
   - [x] Server-side seam in place for future auth/session handling
-  - [ ] Follow-up: CORS on the API is now unnecessary for the browser — can be removed later
+  - [x] Removed CORS from the API — the browser never calls it directly anymore
 
 ### Full-stack Docker
 - [ ] Dockerfile for the API (.NET 10 multi-stage: SDK build → runtime image)
