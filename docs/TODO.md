@@ -61,8 +61,8 @@ for the product spec and data model.
 - [x] Add the **api + web** services to `docker-compose.yml` (build, depends_on, ports 5140→8080 / 3000→3000)
   - [x] Wire env: api connection string → the `db` service; web `API_BASE_URL` → `http://api:8080`
   - [x] Apply EF migrations on API startup (guarded by `ApplyMigrationsAtStartup`, enabled in compose)
-- [ ] `docker compose watch` (`develop.watch`) for hot reload — sync source into the containers, rebuild on dependency changes
-- [ ] Goal: whole stack up with a single `docker compose up` / `docker compose watch`
+- [x] `docker compose watch` (`develop.watch`) for hot reload — dev stages (`dotnet watch` / `next dev`) + `docker-compose.dev.yml` overlay
+- [x] Goal: whole stack up with a single `docker compose up` (prod) or `... -f docker-compose.dev.yml watch` (hot reload)
 
 ## Cross-cutting / later
 

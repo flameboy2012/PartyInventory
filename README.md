@@ -32,37 +32,46 @@ party. Players join a party with a share code; no accounts required.
 
 ## Getting started
 
-### 1. Start the database
+### Run the whole stack with Docker (recommended)
 
 ```bash
-docker compose up -d
+docker compose up --build
 ```
 
-This runs PostgreSQL on `localhost:5432` (db `party_inventory`, user `party`,
-password `party_dev_pw` — dev only). The dev connection string is set in
-`api/PartyInventory.Api/appsettings.Development.json`.
+Brings up Postgres, the API, the web app, and pgAdmin. The API applies its EF
+migrations on startup. Then open:
 
-### 2. Run the API
+- Web app: http://localhost:3000
+- API + Scalar explorer: http://localhost:5140/scalar
+- pgAdmin: http://localhost:5050
+
+The browser talks only to the web app; its BFF proxy forwards `/api/*` to the API
+over the internal Docker network (`http://api:8080`).
+
+### Hot reload while developing
 
 ```bash
-cd api/PartyInventory.Api
-dotnet run
+docker compose -f docker-compose.yml -f docker-compose.dev.yml watch
 ```
 
-In development, an interactive API explorer (Scalar) is available at **`/scalar`**
-(reading the OpenAPI document at `/openapi/v1.json`) for trying endpoints in the browser.
+Runs the API (`dotnet watch`) and web (`next dev`) in dev mode and syncs source
+changes into the containers for hot reload.
 
-### 3. Run the frontend
+### Or run pieces locally
+
+Start just the database, then run each app on the host:
 
 ```bash
-cd web
-npm install
-npm run dev
+docker compose up -d db
+(cd api/PartyInventory.Api && dotnet run)   # API on http://localhost:5140
+(cd web && npm install && npm run dev)       # web on http://localhost:3000
 ```
 
-The frontend runs on http://localhost:3000.
+When running the web app locally, its BFF reads `API_BASE_URL` (default
+`http://localhost:5140`, see `web/.env.example`).
 
 ## Status
 
-Project scaffolding is in place. The domain model (parties, characters, items,
-inventories) and the real-time endpoints are still to be designed.
+See [docs/TODO.md](docs/TODO.md) for progress. Core API (parties, characters,
+items, stash + moves) and the web UI are in place; real-time sync (SignalR) is
+still to come.
