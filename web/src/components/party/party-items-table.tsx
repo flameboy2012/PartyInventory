@@ -1,11 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import { MoreHorizontal } from "lucide-react";
 import { useApi } from "@/components/api-provider";
 import { EditItemDialog } from "@/components/party/edit-item-dialog";
 import { MoveItemDialog } from "@/components/party/move-item-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -79,17 +87,30 @@ export function PartyItemsTable({
                 {Number(item.valueGp)} gp
               </TableCell>
               <TableCell className="text-right">
-                <div className="flex justify-end gap-1">
-                  <Button variant="ghost" size="sm" onClick={() => setEditingItem(item)}>
-                    Edit
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => setMovingItem(item)}>
-                    Move
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => handleDelete(item.id)}>
-                    Delete
-                  </Button>
-                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    render={
+                      <Button variant="ghost" size="icon-sm" aria-label="Item actions" />
+                    }
+                  >
+                    <MoreHorizontal />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setEditingItem(item)}>
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setMovingItem(item)}>
+                      Move
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onClick={() => handleDelete(item.id)}
+                    >
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </TableCell>
             </TableRow>
           ))}
