@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import useSWR from "swr";
 import { PartyHeader } from "@/components/party/party-header";
 import { PartyItemsSection } from "@/components/party/party-items-section";
-import type { ItemResponse, PartyResponse } from "@/lib/api/types";
+import type { CharacterResponse, ItemResponse, PartyResponse } from "@/lib/api/types";
 
 export default function PartyPage() {
   const { id } = useParams<{ id: string }>();
@@ -15,6 +15,9 @@ export default function PartyPage() {
     isLoading: partyLoading,
     mutate: mutateParty,
   } = useSWR<PartyResponse>(`/api/parties/${id}`);
+  const { data: characters, mutate: mutateCharacters } = useSWR<CharacterResponse[]>(
+    `/api/parties/${id}/characters`,
+  );
   const { data: items, mutate: mutateItems } = useSWR<ItemResponse[]>(
     `/api/parties/${id}/items`,
   );
@@ -32,12 +35,14 @@ export default function PartyPage() {
 
       {party && (
         <div className="mt-4 space-y-6">
-          <PartyHeader party={party} />
+          <PartyHeader party={party} characters={characters ?? []} />
           <PartyItemsSection
             party={party}
+            characters={characters ?? []}
             items={items ?? []}
             onItemsChanged={() => mutateItems()}
-            onCharactersChanged={() => mutateParty()}
+            onCharactersChanged={() => mutateCharacters()}
+            onPartyChanged={() => mutateParty()}
           />
         </div>
       )}
