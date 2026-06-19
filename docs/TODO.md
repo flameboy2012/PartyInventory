@@ -45,6 +45,25 @@ for the product spec and data model.
 ### Real-time
 - [ ] SignalR client — join the party group, apply live updates (after backend SignalR lands)
 
+## Architecture & infrastructure
+
+### Frontend as a BFF (backend-for-frontend)
+- [ ] Route browser → API calls through the Next.js server instead of calling the .NET API directly from the browser
+  - [ ] Add Next.js route handler(s) under `app/api/...` that proxy/forward to the .NET API
+  - [ ] Browser calls same-origin Next.js endpoints — drops the need for browser CORS; the .NET API can stay internal
+  - [ ] `API_BASE_URL` becomes **server-only** (no longer passed to the client `ApiProvider`); SWR / openapi-fetch base URL becomes relative/same-origin
+  - [ ] Gives a server-side seam for future auth/session handling
+  - Note: pairs with full-stack Docker — the API only needs to be reachable on the internal Docker network
+
+### Full-stack Docker
+- [ ] Dockerfile for the API (.NET 10 multi-stage: SDK build → runtime image)
+- [ ] Dockerfile for the web app (Next.js standalone output, multi-stage)
+- [ ] Extend `docker-compose.yml` to run **api + web** alongside `db` (and `pgadmin`)
+  - [ ] Wire env: web `API_BASE_URL` → `http://api:<port>`; api connection string → the `db` service
+  - [ ] Apply EF migrations on API startup (or a dedicated migration step)
+- [ ] `docker compose watch` (`develop.watch`) for hot reload — sync source into the containers, rebuild on dependency changes
+- [ ] Goal: whole stack up with a single `docker compose up` / `docker compose watch`
+
 ## Cross-cutting / later
 
 - [ ] Frontend/e2e tests
