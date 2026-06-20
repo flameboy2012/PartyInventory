@@ -24,17 +24,17 @@ export function usePartyRealtime(partyId: string, onChanged: () => void) {
       connection.invoke("JoinParty", partyId).catch(() => {});
     });
 
-    let active = true;
-    connection
+    const started = connection
       .start()
-      .then(() => (active ? connection.invoke("JoinParty", partyId) : undefined))
+      .then(() => connection.invoke("JoinParty", partyId))
       .catch(() => {
         // Realtime is best-effort; the app still works without it.
       });
 
     return () => {
-      active = false;
-      void connection.stop();
+      // Wait for start() to settle before stopping, so we never abort
+      // negotiation (e.g. React Strict Mode's mount/unmount/mount in dev).
+      void started.finally(() => connection.stop());
     };
   }, [partyId]);
 }
