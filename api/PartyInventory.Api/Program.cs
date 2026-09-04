@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
+using PartyInventory.Api.Audit;
 using PartyInventory.Api.Data;
 using PartyInventory.Api.Endpoints;
 using PartyInventory.Api.Hubs;
@@ -21,6 +22,7 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 
 builder.Services.AddSignalR();
 builder.Services.AddScoped<IPartyNotifier, PartyNotifier>();
+builder.Services.AddScoped<IAuditLog, AuditLog>();
 
 var app = builder.Build();
 
@@ -46,6 +48,7 @@ app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 app.MapPartyEndpoints();
 app.MapCharacterEndpoints();
 app.MapItemEndpoints();
+app.MapAuditEndpoints();
 app.MapHub<PartyHub>("/api/hubs/party");
 
 app.Run();

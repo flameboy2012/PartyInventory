@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using PartyInventory.Api.Audit;
 using PartyInventory.Api.Contracts;
 using PartyInventory.Api.Data;
 using PartyInventory.Api.Domain;
@@ -10,7 +11,10 @@ public static class ItemEndpoints
 {
     public static IEndpointRouteBuilder MapItemEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/parties/{partyId:guid}/items").WithTags("Items");
+        // RequireActorName covers the whole group; it only challenges the mutating routes.
+        var group = app.MapGroup("/api/parties/{partyId:guid}/items")
+                       .WithTags("Items")
+                       .RequireActorName();
 
         group.MapGet("/", ListItems)
              .Produces<List<ItemResponse>>()
@@ -68,7 +72,8 @@ public static class ItemEndpoints
     }
 
     private static async Task<IResult> CreateItem(
-        Guid partyId, CreateItemRequest request, AppDbContext db, IPartyNotifier notifier)
+        Guid partyId, CreateItemRequest request, AppDbContext db, IPartyNotifier notifier,
+        IAuditLog audit, HttpContext http)
     {
         var errors = Validate(request.Name, request.Quantity, request.ValueGp, request.Weight);
         if (errors.Count > 0)
@@ -102,6 +107,10 @@ public static class ItemEndpoints
         };
 
         db.Items.Add(item);
+        audit.Record(
+            partyId, http.Actor(), AuditAction.ItemAdded, item.Name,
+            $"Added {Amount(item.Name, item.Quantity)} to {await HolderNameAsync(db, item.CharacterId)}",
+            item.Id);
         await db.SaveChangesAsync();
         await notifier.PartyChanged(partyId);
 
@@ -109,7 +118,8 @@ public static class ItemEndpoints
     }
 
     private static async Task<IResult> UpdateItem(
-        Guid partyId, Guid itemId, UpdateItemRequest request, AppDbContext db, IPartyNotifier notifier)
+        Guid partyId, Guid itemId, UpdateItemRequest request, AppDbContext db, IPartyNotifier notifier,
+        IAuditLog audit, HttpContext http)
     {
         var errors = Validate(request.Name, request.Quantity, request.ValueGp, request.Weight);
         if (errors.Count > 0)
@@ -128,6 +138,9 @@ public static class ItemEndpoints
             return Results.ValidationProblem(errors);
         }
 
+        // This one route does double duty, so compare before and after to tell a move from an edit.
+        var before = Snapshot(item);
+
         item.Name = request.Name.Trim();
         item.Description = Normalize(request.Description);
         item.Quantity = request.Quantity;
@@ -137,6 +150,26 @@ public static class ItemEndpoints
         item.Rarity = request.Rarity;
         item.Equipped = request.Equipped;
         item.CharacterId = request.CharacterId; // move (null = stash)
+
+        var moved = item.CharacterId != before.CharacterId;
+        if (moved)
+        {
+            audit.Record(
+                partyId, http.Actor(), AuditAction.ItemMoved, before.Name,
+                $"Moved {before.Name} from {await HolderNameAsync(db, before.CharacterId)} " +
+                $"to {await HolderNameAsync(db, item.CharacterId)}",
+                item.Id);
+        }
+
+        // An edit is recorded whenever the request wasn't purely a move, so a successful call is
+        // never silent.
+        if (!moved || Changes(before, item).Count > 0)
+        {
+            audit.Record(
+                partyId, http.Actor(), AuditAction.ItemEdited, before.Name,
+                EditDetail(before, item), item.Id);
+        }
+
         await db.SaveChangesAsync();
         await notifier.PartyChanged(partyId);
 
@@ -144,7 +177,8 @@ public static class ItemEndpoints
     }
 
     private static async Task<IResult> DeleteItem(
-        Guid partyId, Guid itemId, AppDbContext db, IPartyNotifier notifier)
+        Guid partyId, Guid itemId, AppDbContext db, IPartyNotifier notifier, IAuditLog audit,
+        HttpContext http)
     {
         var item = await db.Items.FirstOrDefaultAsync(i => i.Id == itemId && i.PartyId == partyId);
         if (item is null)
@@ -153,6 +187,10 @@ public static class ItemEndpoints
         }
 
         db.Items.Remove(item);
+        // The name is copied into the entry as text, so the history still names the item afterwards.
+        audit.Record(
+            partyId, http.Actor(), AuditAction.ItemDeleted, item.Name,
+            $"Removed {Amount(item.Name, item.Quantity)}", item.Id);
         await db.SaveChangesAsync();
         await notifier.PartyChanged(partyId);
         return Results.NoContent();
@@ -180,6 +218,75 @@ public static class ItemEndpoints
 
         return Results.Ok(new StashResponse(coins, items.Select(ToResponse).ToList()));
     }
+
+    /// <summary>An item's audited fields as they stood before an update.</summary>
+    private sealed record ItemSnapshot(
+        string Name,
+        string? Description,
+        int Quantity,
+        decimal ValueGp,
+        decimal Weight,
+        ItemType Type,
+        ItemRarity Rarity,
+        bool Equipped,
+        Guid? CharacterId);
+
+    private static ItemSnapshot Snapshot(Item item) => new(
+        item.Name, item.Description, item.Quantity, item.ValueGp, item.Weight,
+        item.Type, item.Rarity, item.Equipped, item.CharacterId);
+
+    /// <summary>Which of an item's own details changed. The holder is a move, not an edit.</summary>
+    private static List<string> Changes(ItemSnapshot before, Item after)
+    {
+        var changed = new List<string>();
+
+        void Check(bool differs, string field)
+        {
+            if (differs)
+            {
+                changed.Add(field);
+            }
+        }
+
+        Check(after.Name != before.Name, "name");
+        Check(after.Description != before.Description, "description");
+        Check(after.Quantity != before.Quantity, "quantity");
+        Check(after.ValueGp != before.ValueGp, "value");
+        Check(after.Weight != before.Weight, "weight");
+        Check(after.Type != before.Type, "type");
+        Check(after.Rarity != before.Rarity, "rarity");
+        Check(after.Equipped != before.Equipped, "equipped");
+
+        return changed;
+    }
+
+    private static string EditDetail(ItemSnapshot before, Item after)
+    {
+        var changed = Changes(before, after);
+
+        if (after.Name != before.Name && changed.Count == 1)
+        {
+            return $"Renamed {before.Name} to {after.Name}";
+        }
+
+        // Name the changed fields while the list is still short enough to read.
+        return changed.Count is > 0 and <= 3
+            ? $"Edited {before.Name} ({string.Join(", ", changed)})"
+            : $"Edited {before.Name}";
+    }
+
+    /// <summary>An item with its count, e.g. <c>Torch ×3</c>, or just the name for a single one.</summary>
+    private static string Amount(string name, int quantity) =>
+        quantity > 1 ? $"{name} ×{quantity}" : name;
+
+    /// <summary>Names an item's holder for a summary: a character, or the shared stash.</summary>
+    private static async Task<string> HolderNameAsync(AppDbContext db, Guid? characterId) =>
+        characterId is null
+            ? AuditText.Stash
+            : await db.Characters
+                  .Where(c => c.Id == characterId)
+                  .Select(c => c.Name)
+                  .FirstOrDefaultAsync() ?? "an unknown character";
 
     private static async Task<bool> CharacterBelongsToPartyAsync(
         AppDbContext db, Guid partyId, Guid? characterId, Dictionary<string, string[]> errors)

@@ -2,6 +2,7 @@
 // Run `npm run gen:api` to regenerate from openapi/v1.json.
 
 const ENTRIES: { method: string; source: string }[] = [
+  { method: "GET", source: "^/api/parties/[^/]+/audit$" },
   { method: "POST", source: "^/api/parties/[^/]+/characters/[^/]+/coins/spend$" },
   { method: "PUT", source: "^/api/parties/[^/]+/characters/[^/]+/coins$" },
   { method: "DELETE", source: "^/api/parties/[^/]+/characters/[^/]+$" },

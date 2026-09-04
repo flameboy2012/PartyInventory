@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using PartyInventory.Api.Audit;
 using PartyInventory.Api.Contracts;
 using PartyInventory.Api.Data;
 using PartyInventory.Api.Domain;
@@ -10,7 +11,10 @@ public static class CharacterEndpoints
 {
     public static IEndpointRouteBuilder MapCharacterEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/parties/{partyId:guid}/characters").WithTags("Characters");
+        // RequireActorName covers the whole group; it only challenges the mutating routes.
+        var group = app.MapGroup("/api/parties/{partyId:guid}/characters")
+                       .WithTags("Characters")
+                       .RequireActorName();
 
         group.MapGet("/", ListCharacters)
              .Produces<List<CharacterResponse>>()
@@ -65,7 +69,8 @@ public static class CharacterEndpoints
     }
 
     private static async Task<IResult> CreateCharacter(
-        Guid partyId, CreateCharacterRequest request, AppDbContext db, IPartyNotifier notifier)
+        Guid partyId, CreateCharacterRequest request, AppDbContext db, IPartyNotifier notifier,
+        IAuditLog audit, HttpContext http)
     {
         var errors = Validate(request.Name, request.Level);
         if (errors.Count > 0)
@@ -88,6 +93,9 @@ public static class CharacterEndpoints
         };
 
         db.Characters.Add(character);
+        audit.Record(
+            partyId, http.Actor(), AuditAction.CharacterCreated, character.Name,
+            $"Added {character.Name}", character.Id);
         await db.SaveChangesAsync();
         await notifier.PartyChanged(partyId);
 
@@ -98,7 +106,7 @@ public static class CharacterEndpoints
 
     private static async Task<IResult> UpdateCharacter(
         Guid partyId, Guid characterId, UpdateCharacterRequest request, AppDbContext db,
-        IPartyNotifier notifier)
+        IPartyNotifier notifier, IAuditLog audit, HttpContext http)
     {
         var errors = Validate(request.Name, request.Level);
         if (errors.Count > 0)
@@ -114,9 +122,19 @@ public static class CharacterEndpoints
             return Results.NotFound();
         }
 
+        // The name as it stood before the edit, so the entry keeps its historical subject.
+        var previousName = character.Name;
+
         character.Name = request.Name.Trim();
         character.Class = Normalize(request.Class);
         character.Level = request.Level;
+
+        audit.Record(
+            partyId, http.Actor(), AuditAction.CharacterEdited, previousName,
+            character.Name == previousName
+                ? $"Edited {previousName}"
+                : $"Renamed {previousName} to {character.Name}",
+            character.Id);
         await db.SaveChangesAsync();
         await notifier.PartyChanged(partyId);
 
@@ -124,7 +142,8 @@ public static class CharacterEndpoints
     }
 
     private static async Task<IResult> UpdateCharacterCoins(
-        Guid partyId, Guid characterId, CoinPurseDto request, AppDbContext db, IPartyNotifier notifier)
+        Guid partyId, Guid characterId, CoinPurseDto request, AppDbContext db, IPartyNotifier notifier,
+        IAuditLog audit, HttpContext http)
     {
         var errors = CoinUpdates.Validate(request);
         if (errors.Count > 0)
@@ -141,6 +160,9 @@ public static class CharacterEndpoints
         }
 
         CoinUpdates.Apply(character.Coins, request);
+        audit.Record(
+            partyId, http.Actor(), AuditAction.CharacterCoinsSet, character.Name,
+            $"Set {character.Name}'s coins to {AuditText.Coins(request)}", character.Id);
         await db.SaveChangesAsync();
         await notifier.PartyChanged(partyId);
 
@@ -148,7 +170,8 @@ public static class CharacterEndpoints
     }
 
     private static async Task<IResult> SpendCharacterCoins(
-        Guid partyId, Guid characterId, SpendCoinsRequest request, AppDbContext db, IPartyNotifier notifier)
+        Guid partyId, Guid characterId, SpendCoinsRequest request, AppDbContext db, IPartyNotifier notifier,
+        IAuditLog audit, HttpContext http)
     {
         var errors = CoinUpdates.ValidateSpend(request);
         if (errors.Count > 0)
@@ -172,13 +195,17 @@ public static class CharacterEndpoints
             });
         }
 
+        audit.Record(
+            partyId, http.Actor(), AuditAction.CharacterCoinsSpent, character.Name,
+            $"Spent {AuditText.Coins(request)} from {character.Name}", character.Id);
         await db.SaveChangesAsync();
         await notifier.PartyChanged(partyId);
         return Results.Ok(ToResponse(character));
     }
 
     private static async Task<IResult> DeleteCharacter(
-        Guid partyId, Guid characterId, AppDbContext db, IPartyNotifier notifier)
+        Guid partyId, Guid characterId, AppDbContext db, IPartyNotifier notifier, IAuditLog audit,
+        HttpContext http)
     {
         var character = await db.Characters
             .FirstOrDefaultAsync(c => c.Id == characterId && c.PartyId == partyId);
@@ -190,6 +217,10 @@ public static class CharacterEndpoints
 
         // Items owned by this character fall back to the party stash (FK is ON DELETE SET NULL).
         db.Characters.Remove(character);
+        // The name is copied into the entry, so the history still reads after the row is gone.
+        audit.Record(
+            partyId, http.Actor(), AuditAction.CharacterDeleted, character.Name,
+            $"Removed {character.Name}", character.Id);
         await db.SaveChangesAsync();
         await notifier.PartyChanged(partyId);
 

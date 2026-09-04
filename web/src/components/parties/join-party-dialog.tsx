@@ -18,12 +18,13 @@ import { Label } from "@/components/ui/label";
 export function JoinPartyDialog({
   onJoined,
 }: {
-  onJoined: (party: { id: string; name: string; joinCode: string }) => void;
+  onJoined: (party: { id: string; name: string; joinCode: string; actorName: string }) => void;
 }) {
   const api = useApi();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [code, setCode] = useState("");
+  const [actorName, setActorName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -41,13 +42,16 @@ export function JoinPartyDialog({
       return;
     }
 
+    // The name is captured here so joining stays one step and the party page doesn't ask again.
     onJoined({
       id: result.data.id,
       name: result.data.name,
       joinCode: result.data.joinCode,
+      actorName: actorName.trim(),
     });
     setOpen(false);
     setCode("");
+    setActorName("");
     router.push(`/parties/${result.data.id}`);
   }
 
@@ -61,22 +65,41 @@ export function JoinPartyDialog({
           <form onSubmit={handleSubmit}>
             <DialogHeader>
               <DialogTitle>Join a party</DialogTitle>
-              <DialogDescription>Enter the share code you were given.</DialogDescription>
+              <DialogDescription>
+                Enter the share code you were given, and the name your changes are recorded under.
+              </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-2 py-4">
-              <Label htmlFor="join-code">Share code</Label>
-              <Input
-                id="join-code"
-                value={code}
-                onChange={(event) => setCode(event.target.value.toUpperCase())}
-                placeholder="ABC123"
-                autoFocus
-                className="font-mono"
-              />
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="join-code">Share code</Label>
+                <Input
+                  id="join-code"
+                  value={code}
+                  onChange={(event) => setCode(event.target.value.toUpperCase())}
+                  placeholder="ABC123"
+                  autoFocus
+                  className="font-mono"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="join-actor-name">Your name</Label>
+                <Input
+                  id="join-actor-name"
+                  value={actorName}
+                  onChange={(event) => setActorName(event.target.value)}
+                  placeholder="Scott"
+                  maxLength={60}
+                />
+              </div>
               {error && <p className="text-sm text-destructive">{error}</p>}
             </div>
             <DialogFooter>
-              <Button type="submit" disabled={submitting || code.trim().length === 0}>
+              <Button
+                type="submit"
+                disabled={
+                  submitting || code.trim().length === 0 || actorName.trim().length === 0
+                }
+              >
                 {submitting ? "Joining…" : "Join"}
               </Button>
             </DialogFooter>

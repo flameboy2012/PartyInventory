@@ -22,6 +22,49 @@ namespace PartyInventory.Api.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("PartyInventory.Api.Domain.AuditEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<string>("ActorName")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<string>("Detail")
+                        .IsRequired()
+                        .HasMaxLength(400)
+                        .HasColumnType("character varying(400)");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("PartyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("SubjectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SubjectName")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PartyId", "OccurredAt", "Id")
+                        .IsDescending(false, true, true);
+
+                    b.ToTable("AuditEntries");
+                });
+
             modelBuilder.Entity("PartyInventory.Api.Domain.Character", b =>
                 {
                     b.Property<Guid>("Id")
@@ -129,6 +172,15 @@ namespace PartyInventory.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("Parties");
+                });
+
+            modelBuilder.Entity("PartyInventory.Api.Domain.AuditEntry", b =>
+                {
+                    b.HasOne("PartyInventory.Api.Domain.Party", null)
+                        .WithMany()
+                        .HasForeignKey("PartyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("PartyInventory.Api.Domain.Character", b =>

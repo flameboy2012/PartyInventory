@@ -81,6 +81,62 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/parties/{partyId}/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    take?: number | string;
+                    before?: string;
+                };
+                header?: never;
+                path: {
+                    partyId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AuditFeedResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/parties": {
         parameters: {
             query?: never;
@@ -939,6 +995,24 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @enum {unknown} */
+        AuditAction: "PartyCoinsSet" | "PartyCoinsSpent" | "CoinsTransferred" | "CharacterCreated" | "CharacterEdited" | "CharacterDeleted" | "CharacterCoinsSet" | "CharacterCoinsSpent" | "ItemAdded" | "ItemEdited" | "ItemMoved" | "ItemDeleted";
+        AuditEntryResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            occurredAt: string;
+            actorName: string;
+            action: components["schemas"]["AuditAction"];
+            /** Format: uuid */
+            subjectId: null | string;
+            subjectName: string;
+            detail: string;
+        };
+        AuditFeedResponse: {
+            entries: components["schemas"]["AuditEntryResponse"][];
+            nextCursor: null | string;
+        };
         CharacterResponse: {
             /** Format: uuid */
             id: string;

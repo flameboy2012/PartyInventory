@@ -11,7 +11,9 @@ import { HttpTransportType, HubConnectionBuilder } from "@microsoft/signalr";
 export function usePartyRealtime(partyId: string, onChanged: () => void) {
   // Keep the latest callback without re-establishing the connection each render.
   const onChangedRef = useRef(onChanged);
-  onChangedRef.current = onChanged;
+  useEffect(() => {
+    onChangedRef.current = onChanged;
+  });
 
   useEffect(() => {
     const connection = new HubConnectionBuilder()

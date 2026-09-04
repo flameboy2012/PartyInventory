@@ -6,6 +6,12 @@ out/
 *.tsbuildinfo
 next-env.d.ts
 
+# ---- Playwright (web/) ----
+test-results/
+playwright-report/
+blob-report/
+.playwright/
+
 # ---- .NET (api/) ----
 bin/
 obj/

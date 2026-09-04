@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
+using PartyInventory.Api.Audit;
 using PartyInventory.Api.Contracts;
 using PartyInventory.Api.Data;
 using PartyInventory.Api.Domain;
@@ -29,15 +30,20 @@ public static class PartyEndpoints
         group.MapGet("/{id:guid}", GetParty)
              .Produces<PartyResponse>()
              .Produces(StatusCodes.Status404NotFound);
+        // Creating and joining a party are exempt from RequireActorName: the player has no name
+        // for this party yet at that point, and neither records an audit event.
         group.MapPut("/{id:guid}/coins", UpdatePartyCoins)
+             .RequireActorName()
              .Produces<PartyResponse>()
              .ProducesValidationProblem()
              .Produces(StatusCodes.Status404NotFound);
         group.MapPost("/{id:guid}/coins/spend", SpendPartyCoins)
+             .RequireActorName()
              .Produces<PartyResponse>()
              .ProducesValidationProblem()
              .Produces(StatusCodes.Status404NotFound);
         group.MapPost("/{id:guid}/coins/transfer", TransferCoins)
+             .RequireActorName()
              .Produces<TransferCoinsResponse>()
              .ProducesValidationProblem()
              .Produces(StatusCodes.Status404NotFound);
@@ -112,7 +118,8 @@ public static class PartyEndpoints
     }
 
     private static async Task<IResult> UpdatePartyCoins(
-        Guid id, CoinPurseDto request, AppDbContext db, IPartyNotifier notifier)
+        Guid id, CoinPurseDto request, AppDbContext db, IPartyNotifier notifier, IAuditLog audit,
+        HttpContext http)
     {
         var errors = CoinUpdates.Validate(request);
         if (errors.Count > 0)
@@ -130,6 +137,9 @@ public static class PartyEndpoints
         }
 
         CoinUpdates.Apply(party.Coins, request);
+        audit.Record(
+            id, http.Actor(), AuditAction.PartyCoinsSet, party.Name,
+            $"Set {AuditText.Stash} to {AuditText.Coins(request)}");
         await db.SaveChangesAsync();
         await notifier.PartyChanged(id);
 
@@ -137,7 +147,8 @@ public static class PartyEndpoints
     }
 
     private static async Task<IResult> SpendPartyCoins(
-        Guid id, SpendCoinsRequest request, AppDbContext db, IPartyNotifier notifier)
+        Guid id, SpendCoinsRequest request, AppDbContext db, IPartyNotifier notifier, IAuditLog audit,
+        HttpContext http)
     {
         var errors = CoinUpdates.ValidateSpend(request);
         if (errors.Count > 0)
@@ -162,13 +173,19 @@ public static class PartyEndpoints
             });
         }
 
+        // The amount spent, not the resulting balances: covering a spend can break higher
+        // denominations down, and a balance diff would misrepresent a plain purchase.
+        audit.Record(
+            id, http.Actor(), AuditAction.PartyCoinsSpent, party.Name,
+            $"Spent {AuditText.Coins(request)} from {AuditText.Stash}");
         await db.SaveChangesAsync();
         await notifier.PartyChanged(id);
         return Results.Ok(ToResponse(party));
     }
 
     private static async Task<IResult> TransferCoins(
-        Guid id, TransferCoinsRequest request, AppDbContext db, IPartyNotifier notifier)
+        Guid id, TransferCoinsRequest request, AppDbContext db, IPartyNotifier notifier, IAuditLog audit,
+        HttpContext http)
     {
         var errors = CoinUpdates.ValidateTransfer(request);
         if (errors.Count > 0)
@@ -223,6 +240,13 @@ public static class PartyEndpoints
 
         CoinUpdates.Add(
             destination, request.Copper, request.Silver, request.Electrum, request.Gold, request.Platinum);
+
+        // One movement, one event — recording it as two purse changes would lose the link.
+        audit.Record(
+            id, http.Actor(), AuditAction.CoinsTransferred, party.Name,
+            $"Transferred {AuditText.Coins(request)} " +
+            $"from {AuditText.Holder(party, request.FromCharacterId)} " +
+            $"to {AuditText.Holder(party, request.ToCharacterId)}");
         await db.SaveChangesAsync();
         await notifier.PartyChanged(id);
 

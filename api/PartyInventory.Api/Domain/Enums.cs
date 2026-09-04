@@ -22,3 +22,24 @@ public enum ItemRarity
     Legendary,
     Artifact
 }
+
+/// <summary>
+/// The kind of change an <see cref="AuditEntry"/> records. One value per mutating operation,
+/// except that editing an item's holder and editing its details are separate kinds even though
+/// both arrive on the same request.
+/// </summary>
+public enum AuditAction
+{
+    PartyCoinsSet,
+    PartyCoinsSpent,
+    CoinsTransferred,
+    CharacterCreated,
+    CharacterEdited,
+    CharacterDeleted,
+    CharacterCoinsSet,
+    CharacterCoinsSpent,
+    ItemAdded,
+    ItemEdited,
+    ItemMoved,
+    ItemDeleted
+}

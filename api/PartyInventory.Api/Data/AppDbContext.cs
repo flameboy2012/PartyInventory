@@ -8,6 +8,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Party> Parties => Set<Party>();
     public DbSet<Character> Characters => Set<Character>();
     public DbSet<Item> Items => Set<Item>();
+    public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -51,6 +52,26 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             item.Property(i => i.Rarity).HasConversion<string>().HasMaxLength(20);
             item.Property(i => i.ValueGp).HasPrecision(12, 2);
             item.Property(i => i.Weight).HasPrecision(10, 2);
+        });
+
+        modelBuilder.Entity<AuditEntry>(audit =>
+        {
+            audit.Property(a => a.Action).HasConversion<string>().HasMaxLength(40);
+            audit.Property(a => a.ActorName).HasMaxLength(AuditEntry.ActorNameMaxLength);
+            audit.Property(a => a.SubjectName).HasMaxLength(AuditEntry.SubjectNameMaxLength);
+            audit.Property(a => a.Detail).HasMaxLength(AuditEntry.DetailMaxLength);
+
+            // The feed's only query: one party's entries, newest first, with (OccurredAt, Id) as
+            // the keyset cursor.
+            audit.HasIndex(a => new { a.PartyId, a.OccurredAt, a.Id })
+                 .IsDescending(false, true, true);
+
+            // No navigation on Party: audit entries are never loaded as part of the party graph.
+            // Deleting a party is the one deletion that should take its history with it.
+            audit.HasOne<Party>()
+                 .WithMany()
+                 .HasForeignKey(a => a.PartyId)
+                 .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

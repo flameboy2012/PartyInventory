@@ -55,6 +55,68 @@
         }
       }
     },
+    "/api/parties/{partyId}/audit": {
+      "get": {
+        "tags": [
+          "Audit"
+        ],
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "take",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "before",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditFeedResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
     "/api/parties": {
       "get": {
         "tags": [
@@ -934,6 +996,84 @@
   },
   "components": {
     "schemas": {
+      "AuditAction": {
+        "enum": [
+          "PartyCoinsSet",
+          "PartyCoinsSpent",
+          "CoinsTransferred",
+          "CharacterCreated",
+          "CharacterEdited",
+          "CharacterDeleted",
+          "CharacterCoinsSet",
+          "CharacterCoinsSpent",
+          "ItemAdded",
+          "ItemEdited",
+          "ItemMoved",
+          "ItemDeleted"
+        ]
+      },
+      "AuditEntryResponse": {
+        "required": [
+          "id",
+          "occurredAt",
+          "actorName",
+          "action",
+          "subjectId",
+          "subjectName",
+          "detail"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "actorName": {
+            "type": "string"
+          },
+          "action": {
+            "$ref": "#/components/schemas/AuditAction"
+          },
+          "subjectId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "subjectName": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          }
+        }
+      },
+      "AuditFeedResponse": {
+        "required": [
+          "entries",
+          "nextCursor"
+        ],
+        "type": "object",
+        "properties": {
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditEntryResponse"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "CharacterResponse": {
         "required": [
           "id",
@@ -1639,6 +1779,9 @@
     },
     {
       "name": "Items"
+    },
+    {
+      "name": "Audit"
     },
     {
       "name": "Parties"

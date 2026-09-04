@@ -1,4 +1,4 @@
-import { DEFAULT_API_BASE_URL } from "@/lib/api/config";
+import { ACTOR_NAME_HEADER, DEFAULT_API_BASE_URL } from "@/lib/api/config";
 import { isAllowedRoute } from "@/lib/api/routes";
 
 // Headers we must not copy straight through when relaying the response.
@@ -37,6 +37,9 @@ async function proxy(request: Request, segments: string[]) {
   if (contentType) headers.set("content-type", contentType);
   const accept = request.headers.get("accept");
   if (accept) headers.set("accept", accept);
+  // The API rejects a write that doesn't name its actor, so this one must cross the proxy.
+  const actorName = request.headers.get(ACTOR_NAME_HEADER);
+  if (actorName) headers.set(ACTOR_NAME_HEADER, actorName);
 
   const hasBody = request.method !== "GET" && request.method !== "HEAD";
   const apiResponse = await fetch(target, {

@@ -9,3 +9,6 @@ export type StashResponse = components["schemas"]["StashResponse"];
 export type CoinPurse = components["schemas"]["CoinPurseDto"];
 export type ItemType = components["schemas"]["ItemType"];
 export type ItemRarity = components["schemas"]["ItemRarity"];
+export type AuditEntryResponse = components["schemas"]["AuditEntryResponse"];
+export type AuditFeedResponse = components["schemas"]["AuditFeedResponse"];
+export type AuditAction = components["schemas"]["AuditAction"];
