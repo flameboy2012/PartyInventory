@@ -13,16 +13,26 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type { CharacterResponse } from "@/lib/api/types";
 
 export function AddCharacterDialog({
   partyId,
   onAdded,
+  open: openProp,
+  onOpenChange,
 }: {
   partyId: string;
-  onAdded: () => void;
+  /** Receives the created character so a caller can select it. */
+  onAdded: (character: CharacterResponse) => void;
+  /** Pass these to drive the dialog from elsewhere; the built-in trigger is then not rendered. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
   const api = useApi();
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const controlled = openProp !== undefined;
+  const open = controlled ? openProp : uncontrolledOpen;
+  const setOpen = onOpenChange ?? setUncontrolledOpen;
   const [name, setName] = useState("");
   const [className, setClassName] = useState("");
   const [level, setLevel] = useState("");
@@ -43,12 +53,12 @@ export function AddCharacterDialog({
     });
     setSubmitting(false);
 
-    if (result.error) {
+    if (result.error || !result.data) {
       setError("Could not add the character. Check the fields and try again.");
       return;
     }
 
-    onAdded();
+    onAdded(result.data);
     setOpen(false);
     setName("");
     setClassName("");
@@ -57,9 +67,11 @@ export function AddCharacterDialog({
 
   return (
     <>
-      <Button variant="outline" onClick={() => setOpen(true)}>
-        Add character
-      </Button>
+      {!controlled && (
+        <Button variant="outline" size="touch" onClick={() => setOpen(true)}>
+          Add character
+        </Button>
+      )}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <form onSubmit={handleSubmit}>
@@ -72,6 +84,7 @@ export function AddCharacterDialog({
                 <Label htmlFor="char-name">Name</Label>
                 <Input
                   id="char-name"
+                  size="touch"
                   value={name}
                   onChange={(event) => setName(event.target.value)}
                   autoFocus
@@ -82,6 +95,7 @@ export function AddCharacterDialog({
                   <Label htmlFor="char-class">Class</Label>
                   <Input
                     id="char-class"
+                    size="touch"
                     value={className}
                     onChange={(event) => setClassName(event.target.value)}
                     placeholder="Optional"
@@ -91,6 +105,7 @@ export function AddCharacterDialog({
                   <Label htmlFor="char-level">Level</Label>
                   <Input
                     id="char-level"
+                    size="touch"
                     type="number"
                     min={1}
                     value={level}
@@ -102,7 +117,11 @@ export function AddCharacterDialog({
               {error && <p className="text-sm text-destructive">{error}</p>}
             </div>
             <DialogFooter>
-              <Button type="submit" disabled={submitting || name.trim().length === 0}>
+              <Button
+                type="submit"
+                size="touch"
+                disabled={submitting || name.trim().length === 0}
+              >
                 {submitting ? "Adding…" : "Add character"}
               </Button>
             </DialogFooter>

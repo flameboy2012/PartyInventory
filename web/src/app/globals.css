@@ -23,6 +23,16 @@
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
+  --color-rarity-uncommon: var(--rarity-uncommon);
+  --color-rarity-uncommon-fg: var(--rarity-uncommon-fg);
+  --color-rarity-rare: var(--rarity-rare);
+  --color-rarity-rare-fg: var(--rarity-rare-fg);
+  --color-rarity-very-rare: var(--rarity-very-rare);
+  --color-rarity-very-rare-fg: var(--rarity-very-rare-fg);
+  --color-rarity-legendary: var(--rarity-legendary);
+  --color-rarity-legendary-fg: var(--rarity-legendary-fg);
+  --color-rarity-artifact: var(--rarity-artifact);
+  --color-rarity-artifact-fg: var(--rarity-artifact-fg);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -72,6 +82,18 @@
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
+  /* Rarity follows the familiar MMO scale. One chroma and near-identical lightness keeps the six
+     sitting together evenly. Common has no colour of its own, so ordinary gear stays quiet. */
+  --rarity-uncommon: oklch(0.55 0.13 145);
+  --rarity-uncommon-fg: oklch(0.45 0.13 145);
+  --rarity-rare: oklch(0.55 0.13 250);
+  --rarity-rare-fg: oklch(0.48 0.13 250);
+  --rarity-very-rare: oklch(0.55 0.13 300);
+  --rarity-very-rare-fg: oklch(0.48 0.13 300);
+  --rarity-legendary: oklch(0.6 0.13 55);
+  --rarity-legendary-fg: oklch(0.5 0.13 55);
+  --rarity-artifact: oklch(0.55 0.13 25);
+  --rarity-artifact-fg: oklch(0.48 0.13 25);
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
@@ -107,6 +129,17 @@
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
+  /* The bases stay put; only the text lightens, and the 12% mix darkens on its own. */
+  --rarity-uncommon: oklch(0.55 0.13 145);
+  --rarity-uncommon-fg: oklch(0.72 0.13 145);
+  --rarity-rare: oklch(0.55 0.13 250);
+  --rarity-rare-fg: oklch(0.72 0.13 250);
+  --rarity-very-rare: oklch(0.55 0.13 300);
+  --rarity-very-rare-fg: oklch(0.72 0.13 300);
+  --rarity-legendary: oklch(0.6 0.13 55);
+  --rarity-legendary-fg: oklch(0.75 0.13 55);
+  --rarity-artifact: oklch(0.55 0.13 25);
+  --rarity-artifact-fg: oklch(0.72 0.13 25);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);

@@ -128,7 +128,7 @@ export function CoinsDialog({
                 : "Spend coins — higher denominations are broken down as needed."}
             </DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-5 gap-2 py-4">
+          <div className="grid grid-cols-5 gap-1.5 py-4 md:gap-2">
             {DENOMINATIONS.map((denom) => (
               <div key={denom.key} className="grid gap-1">
                 <Label
@@ -139,6 +139,7 @@ export function CoinsDialog({
                 </Label>
                 <Input
                   id={`coin-${denom.key}`}
+                  size="touch"
                   type="number"
                   min={0}
                   value={amounts[denom.key]}
@@ -151,7 +152,7 @@ export function CoinsDialog({
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <DialogFooter>
-            <Button type="submit" disabled={submitting}>
+            <Button type="submit" size="touch" disabled={submitting}>
               {submitting ? "Saving…" : mode === "add" ? "Add coins" : "Spend coins"}
             </Button>
           </DialogFooter>

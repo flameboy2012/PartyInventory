@@ -101,7 +101,9 @@ export function TransferCoinsDialog({
                 id="transfer-dest"
                 value={dest}
                 onChange={(event) => setDest(event.target.value)}
-                className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                // Stays a native <select>: Playwright's selectOption only drives those. It gets
+                // the touch height from a class rather than from the Select primitive's variant.
+                className="h-11 w-full rounded-lg border border-input bg-transparent px-2.5 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:h-8 md:text-sm"
               >
                 {destinations.map((destination) => (
                   <option key={destination.value} value={destination.value}>
@@ -121,6 +123,7 @@ export function TransferCoinsDialog({
                   </Label>
                   <Input
                     id={`transfer-${denom.key}`}
+                    size="touch"
                     type="number"
                     min={0}
                     value={amounts[denom.key]}
@@ -134,7 +137,7 @@ export function TransferCoinsDialog({
             {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
           <DialogFooter>
-            <Button type="submit" disabled={submitting}>
+            <Button type="submit" size="touch" disabled={submitting}>
               {submitting ? "Transferring…" : "Transfer"}
             </Button>
           </DialogFooter>

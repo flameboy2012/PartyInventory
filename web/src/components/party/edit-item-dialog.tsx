@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { ItemRarity, ItemResponse, ItemType } from "@/lib/api/types";
-import { ITEM_RARITIES, ITEM_TYPES } from "@/lib/item-options";
+import { ITEM_RARITIES, ITEM_RARITY_LABELS, ITEM_TYPES } from "@/lib/item-options";
 
 export function EditItemDialog({
   partyId,
@@ -93,6 +93,7 @@ export function EditItemDialog({
               <Label htmlFor="edit-name">Name</Label>
               <Input
                 id="edit-name"
+                size="touch"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 autoFocus
@@ -102,7 +103,7 @@ export function EditItemDialog({
               <div className="grid gap-2">
                 <Label htmlFor="edit-type">Type</Label>
                 <Select value={type} onValueChange={(value) => setType(value as ItemType)}>
-                  <SelectTrigger id="edit-type" className="w-full">
+                  <SelectTrigger id="edit-type" size="touch" className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -117,13 +118,13 @@ export function EditItemDialog({
               <div className="grid gap-2">
                 <Label htmlFor="edit-rarity">Rarity</Label>
                 <Select value={rarity} onValueChange={(value) => setRarity(value as ItemRarity)}>
-                  <SelectTrigger id="edit-rarity" className="w-full">
+                  <SelectTrigger id="edit-rarity" size="touch" className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {ITEM_RARITIES.map((option) => (
                       <SelectItem key={option} value={option}>
-                        {option}
+                        {ITEM_RARITY_LABELS[option]}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -135,6 +136,7 @@ export function EditItemDialog({
                 <Label htmlFor="edit-qty">Quantity</Label>
                 <Input
                   id="edit-qty"
+                  size="touch"
                   type="number"
                   min={1}
                   value={quantity}
@@ -145,6 +147,7 @@ export function EditItemDialog({
                 <Label htmlFor="edit-value">Value (gp)</Label>
                 <Input
                   id="edit-value"
+                  size="touch"
                   type="number"
                   min={0}
                   step="0.01"
@@ -156,6 +159,7 @@ export function EditItemDialog({
                 <Label htmlFor="edit-weight">Weight (lb)</Label>
                 <Input
                   id="edit-weight"
+                  size="touch"
                   type="number"
                   min={0}
                   step="0.1"
@@ -168,6 +172,7 @@ export function EditItemDialog({
               <div className="flex items-center gap-2">
                 <Checkbox
                   id="edit-equipped"
+                  size="touch"
                   checked={inStash ? false : equipped}
                   disabled={inStash}
                   onCheckedChange={(value) => setEquipped(value === true)}
@@ -188,7 +193,7 @@ export function EditItemDialog({
             {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
           <DialogFooter>
-            <Button type="submit" disabled={submitting || name.trim().length === 0}>
+            <Button type="submit" size="touch" disabled={submitting || name.trim().length === 0}>
               {submitting ? "Saving…" : "Save changes"}
             </Button>
           </DialogFooter>

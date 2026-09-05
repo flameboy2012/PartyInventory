@@ -8,7 +8,7 @@ const DENOMINATIONS: { key: keyof CoinPurse; label: string }[] = [
   { key: "copper", label: "cp" },
 ];
 
-/** Formats a coin purse as e.g. "12 gp, 5 sp", omitting empty denominations. */
+/** Formats a coin purse as e.g. "12 gp · 5 sp", omitting empty denominations. */
 export function formatCoins(coins: CoinPurse): string {
   const parts = DENOMINATIONS.map(({ key, label }) => ({
     amount: Number(coins[key] ?? 0),
@@ -17,5 +17,5 @@ export function formatCoins(coins: CoinPurse): string {
     .filter(({ amount }) => amount > 0)
     .map(({ amount, label }) => `${amount} ${label}`);
 
-  return parts.length > 0 ? parts.join(", ") : "0 gp";
+  return parts.length > 0 ? parts.join(" · ") : "0 gp";
 }

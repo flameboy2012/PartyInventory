@@ -86,6 +86,7 @@ export function MoveItemDialog({
               <Button
                 key={destination.value}
                 variant="outline"
+                size="touch"
                 className="justify-start"
                 disabled={submitting}
                 onClick={() => move(destination.value)}

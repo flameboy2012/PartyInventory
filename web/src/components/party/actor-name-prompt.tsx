@@ -38,6 +38,7 @@ export function ActorNamePrompt({
           <Label htmlFor="actor-name">Your name</Label>
           <Input
             id="actor-name"
+            size="touch"
             value={name}
             onChange={(event) => setName(event.target.value)}
             placeholder="Scott"
@@ -45,7 +46,12 @@ export function ActorNamePrompt({
             autoFocus
           />
           <div>
-            <Button type="submit" className="mt-2" disabled={name.trim().length === 0}>
+            <Button
+              type="submit"
+              size="touch"
+              className="mt-2"
+              disabled={name.trim().length === 0}
+            >
               Continue
             </Button>
           </div>

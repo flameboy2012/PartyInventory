@@ -18,5 +18,15 @@ export default defineConfig({
     baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000",
     trace: "on-first-retry",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  // The party view swaps primitives at 768px — sheet below, dialog or popover above — so the
+  // whole suite runs at both widths. A desktop-only run misses every sheet path.
+  projects: [
+    { name: "desktop", use: { ...devices["Desktop Chrome"] } },
+    {
+      name: "phone",
+      // A narrow window rather than a device profile: this is the breakpoint under test, and
+      // emulating touch would change how Playwright drives every control as well.
+      use: { ...devices["Desktop Chrome"], viewport: { width: 390, height: 844 } },
+    },
+  ],
 });

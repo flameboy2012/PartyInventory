@@ -1,14 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeftRight, Minus, Plus } from "lucide-react";
-import { AddCharacterDialog } from "@/components/party/add-character-dialog";
 import { AddItemDialog } from "@/components/party/add-item-dialog";
 import { CoinsDialog } from "@/components/party/coins-dialog";
-import { TransferCoinsDialog } from "@/components/party/transfer-coins-dialog";
+import { HolderPicker, initialsOf, type Holder } from "@/components/party/holder-picker";
 import { PartyItemsTable } from "@/components/party/party-items-table";
+import { TransferCoinsDialog } from "@/components/party/transfer-coins-dialog";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { CharacterResponse, CoinPurse, ItemResponse, PartyResponse } from "@/lib/api/types";
 import { formatCoins } from "@/lib/money";
 
@@ -33,12 +31,12 @@ export function PartyItemsSection({
   const [coinMode, setCoinMode] = useState<"add" | "spend" | null>(null);
   const [transferOpen, setTransferOpen] = useState(false);
 
-  // Fall back to the stash if the active character was removed.
-  const activeTab =
+  // Fall back to the stash if the active character was removed, by this player or another.
+  const activeHolderId =
     active === STASH || characters.some((c) => c.id === active) ? active : STASH;
 
-  const activeCharacterId = activeTab === STASH ? null : activeTab;
-  const activeCharacter = characters.find((c) => c.id === activeTab);
+  const activeCharacterId = activeHolderId === STASH ? null : activeHolderId;
+  const activeCharacter = characters.find((c) => c.id === activeHolderId);
   const locationLabel = activeCharacter ? activeCharacter.name : "the party stash";
   const activeCoins: CoinPurse = activeCharacter ? activeCharacter.coins : party.coins;
   const onCoinsChanged = activeCharacterId === null ? onPartyChanged : onCharactersChanged;
@@ -49,66 +47,74 @@ export function PartyItemsSection({
       : item.characterId === activeCharacterId,
   );
 
+  const holders: Holder[] = [
+    {
+      id: STASH,
+      name: "Party stash",
+      initials: null,
+      detail: "",
+      itemCount: items.filter((item) => item.characterId == null).length,
+      coins: party.coins,
+    },
+    ...characters.map((character) => ({
+      id: character.id,
+      name: character.name,
+      initials: initialsOf(character.name),
+      detail: [
+        character.level != null ? `L${character.level}` : "",
+        character.class ?? "",
+      ]
+        .filter(Boolean)
+        .join(" "),
+      itemCount: items.filter((item) => item.characterId === character.id).length,
+      coins: character.coins,
+    })),
+  ];
+
   const transferDestinations = [
     { value: STASH, label: "Party stash" },
     ...characters.map((c) => ({ value: c.id, label: c.name })),
-  ].filter((purse) => purse.value !== activeTab);
+  ].filter((purse) => purse.value !== activeHolderId);
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Tabs value={activeTab} onValueChange={(value) => setActive(value as string)}>
-          <TabsList>
-            <TabsTrigger value={STASH}>Stash</TabsTrigger>
-            {characters.map((character) => (
-              <TabsTrigger key={character.id} value={character.id}>
-                {character.name}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-        <div className="flex gap-2">
-          <AddCharacterDialog partyId={party.id} onAdded={onCharactersChanged} />
-          <AddItemDialog
-            partyId={party.id}
-            characterId={activeCharacterId}
-            locationLabel={locationLabel}
-            onAdded={onItemsChanged}
-          />
-        </div>
-      </div>
+    <div className="mt-3">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center">
+        <HolderPicker
+          holders={holders}
+          selectedId={activeHolderId}
+          onSelect={setActive}
+          partyId={party.id}
+          onCharacterAdded={onCharactersChanged}
+        />
 
-      <div className="flex items-center gap-3 rounded-lg border px-3 py-2">
-        <span className="text-xs uppercase tracking-wide text-muted-foreground">Coins</span>
-        <span className="text-sm font-medium">{formatCoins(activeCoins)}</span>
-        <div className="ml-auto flex gap-1">
-          <Button
-            variant="outline"
-            size="icon-sm"
-            aria-label="Add coins"
-            onClick={() => setCoinMode("add")}
-          >
-            <Plus />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon-sm"
-            aria-label="Spend coins"
-            onClick={() => setCoinMode("spend")}
-          >
-            <Minus />
-          </Button>
-          {transferDestinations.length > 0 && (
-            <Button
-              variant="outline"
-              size="icon-sm"
-              aria-label="Transfer coins"
-              onClick={() => setTransferOpen(true)}
-            >
-              <ArrowLeftRight />
+        {/* Wraps rather than overflows: a full purse of five denominations is wider than a
+            390px phone once the three buttons are beside it. */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border px-3.5 py-2.5 md:flex-nowrap md:ml-auto md:py-2">
+          <span className="min-w-0 font-mono text-[15px] font-medium tabular-nums md:text-sm">
+            {formatCoins(activeCoins)}
+          </span>
+          <div className="ml-auto flex shrink-0 gap-1.5">
+            <Button variant="outline" size="touch" onClick={() => setCoinMode("add")}>
+              Add
             </Button>
-          )}
+            <Button variant="outline" size="touch" onClick={() => setCoinMode("spend")}>
+              Spend
+            </Button>
+            {transferDestinations.length > 0 && (
+              <Button variant="outline" size="touch" onClick={() => setTransferOpen(true)}>
+                Send
+              </Button>
+            )}
+          </div>
         </div>
+
+        {/* One button: a floating action on a phone, part of this row from md up. */}
+        <AddItemDialog
+          partyId={party.id}
+          characterId={activeCharacterId}
+          locationLabel={locationLabel}
+          onAdded={onItemsChanged}
+        />
       </div>
 
       <PartyItemsTable
